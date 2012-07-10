@@ -1,0 +1,3 @@
+[submodule "img"]
+	path = img
+	url = git@underhalls.net:nemesis-img
