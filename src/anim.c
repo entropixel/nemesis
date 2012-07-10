@@ -7,8 +7,8 @@
 
 #include <SDL.h>
 
-#include "obj.h"
 #include "anim.h"
+#include "obj.h"
 
 animframe_t char_anim_frames [] =
 {

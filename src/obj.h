@@ -5,35 +5,6 @@
 #ifndef OBJ_H__
 #define OBJ_H__
 
-enum
-{
-	ROT_DOWN,
-	ROT_DOWNRIGHT,
-	ROT_RIGHT,
-	ROT_UPRIGHT,
-	ROT_UP,
-	ROT_UPLEFT,
-	ROT_LEFT,
-	ROT_DOWNLEFT
-};
-
-// animation frame
-typedef struct
-{
-	unsigned short pos;
-	char duration;
-	unsigned char next;
-} animframe_t;
-
-// animation definition
-typedef struct
-{
-	unsigned short w;
-	unsigned short h;
-	animframe_t *frames;
-	unsigned short *rots;
-} anim_t;
-
 // generic map object
 typedef struct obj_s
 {

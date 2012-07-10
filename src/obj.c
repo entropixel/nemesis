@@ -8,8 +8,8 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include "obj.h"
 #include "anim.h"
+#include "obj.h"
 
 obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, unsigned short frame, unsigned char rot)
 {

@@ -11,8 +11,8 @@
 #error "Need SDL 2.0"
 #endif
 
-#include "obj.h"
 #include "anim.h"
+#include "obj.h"
 
 SDL_Window *win = NULL;
 SDL_Renderer *rndr = NULL;
@@ -55,7 +55,7 @@ int main (int argc, char **argv)
 	}
 
 	// testing crap now :D
-	SDL_Surface *plsprite = IMG_Load ("img/male_nosleeve_shorts_short.png");
+	SDL_Surface *plsprite = IMG_Load ("img/objects/player/male_unarm/nosleeve_shorts_short.png");
 	obj_t *player = obj_create (32, 32, SDL_CreateTextureFromSurface (rndr, plsprite), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
 
 	SDL_Event ev;
