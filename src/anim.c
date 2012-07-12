@@ -10,6 +10,8 @@
 #include "anim.h"
 #include "obj.h"
 
+unsigned short generic_anim_rots [] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+
 animframe_t char_anim_frames [] =
 {
 	{ 0, -1, -1 }, // standing
@@ -27,12 +29,25 @@ animframe_t char_anim_frames [] =
 	{ 6, 4, char_anim_walk1 }
 };
 
-unsigned short char_anim_rots [] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-
 anim_t char_anim =
 {
 	32,
 	32,
 	char_anim_frames,
-	char_anim_rots
+	generic_anim_rots
+};
+
+animframe_t torch_anim_frames [] =
+{
+	{ 0, 12, 1 },
+	{ 1, 12, 2 },
+	{ 2, 12, 0 }
+};
+
+anim_t torch_anim =
+{
+	16,
+	16,
+	torch_anim_frames,
+	generic_anim_rots
 };

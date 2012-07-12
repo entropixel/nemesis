@@ -3,6 +3,7 @@
    Unauthorized redistribution is prohibited. */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -13,6 +14,28 @@
 
 #include "anim.h"
 #include "obj.h"
+#include "tile.h"
+
+tile_t levtiles [16] [10];
+int levtiles_offs [16] [10] = // FUCK
+{
+	{ 26, 6, 6, 6, 6, 6, 6, 6, 6, 18 },
+	{ 10, 25, 5, 5, 5, 5, 5, 5, 17, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
+	{ 10, 29, 13, 13, 13, 13, 13, 13, 21, 2 },
+	{ 30, 14, 14, 14, 14, 14, 14, 14, 14, 22 }
+};
 
 SDL_Window *win = NULL;
 SDL_Renderer *rndr = NULL;
@@ -55,8 +78,22 @@ int main (int argc, char **argv)
 	}
 
 	// testing crap now :D
-	SDL_Surface *plsprite = IMG_Load ("img/objects/player/male_unarm/nosleeve_shorts_short.png");
+	SDL_Surface *plsprite = IMG_Load ("img/objects/player/male/unarm/nosleeve_shorts_short.png");
+	SDL_Surface *torchspr = IMG_Load ("img/objects/dungeon/adungeon/torches.png");
+	SDL_Surface *tilesheet = IMG_Load ("img/tiles/dungeon/adungeon.png");
 	obj_t *player = obj_create (32, 32, SDL_CreateTextureFromSurface (rndr, plsprite), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
+	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr), &torch_anim, 0, ROT_DOWN);
+	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet);
+	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
+
+	// ew.
+	int i, j;
+	for (i = 0; i < 16; i++)
+		for (j = 0; j < 10; j++)
+		{
+			levtiles [i] [j].sheet = tiletex;
+			levtiles [i] [j].offs = dungeon_tileoffs [levtiles_offs [i] [j]];
+		}
 
 	SDL_Event ev;
 
@@ -162,11 +199,38 @@ int main (int argc, char **argv)
 		else
 			obj_set_frame (player, char_anim_stand);
 
+		SDL_SetRenderDrawColor (rndr, 0, 0, 0, 255);
 		SDL_RenderClear (rndr);
+
+		SDL_Rect tilerct = { .w = 16, .h = 16 };
+		SDL_Rect tiledst = { .w = 16, .h = 16 };
+		for (i = 0; i < 16; i++)
+			for (j = 0; j < 10; j++)
+			{
+				tilerct.x = levtiles [i] [j].offs.x * 16;
+				tilerct.y = levtiles [i] [j].offs.y * 16;
+				tiledst.x = i * 16;
+				tiledst.y = j * 16;
+				SDL_RenderCopy (rndr, levtiles [i] [j].sheet, &tilerct, &tiledst);
+			}
+
+		SDL_RenderCopy (rndr, torch->tex, &(torch->show), &(torch->dest));
 		SDL_RenderCopy (rndr, player->tex, &(player->show), &(player->dest));
+		for (i = 0; i < 16; i++)
+			for (j = 0; j < 10; j++)
+			{
+				int sub = (int)(15.0f * (fabs (i - 8) + 2) * (fabs (j - 1) + 2)) + torch->frame, col;
+				tiledst.x = i * 16;
+				tiledst.y = j * 16;
+				col = (sub > 200) ? 25 : 225 - sub;
+				SDL_SetRenderDrawColor (rndr, col + 20, col + 10, col, 255);
+				SDL_RenderFillRect (rndr, &tiledst);
+			}
+
 		SDL_RenderPresent (rndr);
 
 		obj_adv_frame (player);
+		obj_adv_frame (torch);
 
 		postticks = SDL_GetTicks ();
 		if (postticks - preticks < (1000/60))

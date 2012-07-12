@@ -51,5 +51,6 @@ typedef struct
 } anim_t;
 
 extern anim_t char_anim;
+extern anim_t torch_anim;
 
 #endif // ANIM_H__
