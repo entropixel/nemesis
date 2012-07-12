@@ -219,10 +219,10 @@ int main (int argc, char **argv)
 		for (i = 0; i < 16; i++)
 			for (j = 0; j < 10; j++)
 			{
-				int sub = (int)(15.0f * (fabs (i - 8) + 2) * (fabs (j - 1) + 2)) + torch->frame, col;
+				int sub = 30 * (abs (i - 8) + abs (j - 1)) + torch->frame, col;
 				tiledst.x = i * 16;
 				tiledst.y = j * 16;
-				col = (sub > 200) ? 25 : 225 - sub;
+				col = (sub > 175) ? 50 : 225 - sub;
 				SDL_SetRenderDrawColor (rndr, col + 20, col + 10, col, 255);
 				SDL_RenderFillRect (rndr, &tiledst);
 			}
