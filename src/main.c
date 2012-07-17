@@ -108,7 +108,11 @@ int main (int argc, char **argv)
 
 	SDL_Event ev;
 
+	char renderlights = 1, renderdbg = 0; // debug stuff, yay
+	unsigned short frametimes [48] = { 0 };
+
 	char running = 1;
+	unsigned int curtick = 0;
 	while (running)
 	{
 		int preticks = SDL_GetTicks (), postticks;
@@ -131,6 +135,12 @@ int main (int argc, char **argv)
 							break;
 						case SDLK_LEFT:
 							keymask &= ~(LEFTK);
+							break;
+						case SDLK_F2:
+							renderlights = !renderlights;
+							break;
+						case SDLK_F3:
+							renderdbg = !renderdbg;
 							break;
 					}
 				break;
@@ -227,7 +237,7 @@ int main (int argc, char **argv)
 
 		SDL_RenderCopy (rndr, torch->tex, &(torch->show), &(torch->dest));
 		SDL_RenderCopy (rndr, player->tex, &(player->show), &(player->dest));
-		for (i = 0; i < 16; i++)
+		for (i = 0; i < 16 && renderlights; i++)
 			for (j = 0; j < 10; j++)
 			{
 				int sub = 30 * (abs (i - 8) + abs (j - 1)) + torch->frame, col;
@@ -238,14 +248,29 @@ int main (int argc, char **argv)
 				SDL_RenderFillRect (rndr, &tiledst);
 			}
 
+		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
+		for (i = 0; i < 48 && renderdbg; i++)
+		{
+			SDL_Rect rtime = { .x = i * 2, .w = 2, .h = frametimes [i] * 2 };
+			rtime.y = 160 - rtime.h;
+
+			SDL_SetRenderDrawColor (rndr, (frametimes [i] > 8) ? 255 : 0, (frametimes [i] < 17) ? 255 : 0, 0, 128);
+			SDL_RenderFillRect (rndr, &rtime);
+		}
+		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
+
 		SDL_RenderPresent (rndr);
 
 		obj_adv_frame (player);
 		obj_adv_frame (torch);
 
 		postticks = SDL_GetTicks ();
+		frametimes [curtick % 48] = postticks - preticks; 
+
 		if (postticks - preticks < (1000/60))
 			SDL_Delay ((1000/60) - (postticks - preticks));
+
+		curtick ++;
 	}
 
 	SDL_DestroyRenderer (rndr);
