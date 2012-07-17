@@ -55,7 +55,7 @@ unsigned int keymask = 0;
 // hair - 232
 // eyes - 242
 // shirt - 237
-// pants - 236
+// pants - 235
 
 int main (int argc, char **argv)
 {
@@ -86,11 +86,11 @@ int main (int argc, char **argv)
 
 	// testing crap now :D
 	SDL_Surface *plsprite = IMG_Load ("img/objects/player/male/nosleeve_shorts_short.png");
-	rndr_shift_sprite (plsprite, 232, 20);
-/*	rndr_shift_sprite (plsprite, 242, 110);
-	rndr_shift_sprite (plsprite, 237, 85);
-	rndr_shift_sprite (plsprite, 236, 90);
-*/	SDL_Surface *torchspr = IMG_Load ("img/objects/dungeon/adungeon/torches.png");
+	rndr_shift_sprite (plsprite, 232, 20, 0, -50);
+	rndr_shift_sprite (plsprite, 242, 160, 0, 0);
+	rndr_shift_sprite (plsprite, 237, 77, 0, -30);
+	rndr_shift_sprite (plsprite, 235, 80, 0, -30);
+	SDL_Surface *torchspr = IMG_Load ("img/objects/dungeon/adungeon/torches.png");
 	SDL_Surface *tilesheet = IMG_Load ("img/tiles/dungeon/adungeon.png");
 	obj_t *player = obj_create (32, 32, SDL_CreateTextureFromSurface (rndr, plsprite), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
 	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr), &torch_anim, 0, ROT_DOWN);
