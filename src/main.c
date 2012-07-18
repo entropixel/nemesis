@@ -57,6 +57,20 @@ unsigned int keymask = 0;
 // shirt - 237
 // pants - 235
 
+light_t torch2 =
+{
+	1, 6,
+	0, 255, 200, 30,
+	NULL
+};
+
+light_t torch1 =
+{
+	8, 1,
+	128, 255, 200, 30,
+	&torch2
+};
+
 int main (int argc, char **argv)
 {
 	if (SDL_Init (SDL_INIT_VIDEO) < 0)
@@ -94,6 +108,7 @@ int main (int argc, char **argv)
 	SDL_Surface *tilesheet = IMG_Load ("img/tiles/dungeon/adungeon.png");
 	obj_t *player = obj_create (32, 32, SDL_CreateTextureFromSurface (rndr, plsprite), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
 	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr), &torch_anim, 0, ROT_DOWN);
+	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT);
 	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet);
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 
@@ -236,17 +251,11 @@ int main (int argc, char **argv)
 			}
 
 		SDL_RenderCopy (rndr, torch->tex, &(torch->show), &(torch->dest));
+		SDL_RenderCopy (rndr, torchb->tex, &(torchb->show), &(torchb->dest));
 		SDL_RenderCopy (rndr, player->tex, &(player->show), &(player->dest));
-		for (i = 0; i < 16 && renderlights; i++)
-			for (j = 0; j < 10; j++)
-			{
-				int sub = 30 * (abs (i - 8) + abs (j - 1)) + torch->frame, col;
-				tiledst.x = i * 16;
-				tiledst.y = j * 16;
-				col = (sub > 175) ? 50 : 225 - sub;
-				SDL_SetRenderDrawColor (rndr, col + 20, col + 10, col, 255);
-				SDL_RenderFillRect (rndr, &tiledst);
-			}
+
+		if (renderlights)
+			rndr_do_lighting (rndr, &torch1, 40, 40, 40);
 
 		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
 		for (i = 0; i < 48 && renderdbg; i++)
@@ -263,6 +272,7 @@ int main (int argc, char **argv)
 
 		obj_adv_frame (player);
 		obj_adv_frame (torch);
+		obj_adv_frame (torchb);
 
 		postticks = SDL_GetTicks ();
 		frametimes [curtick % 48] = postticks - preticks; 

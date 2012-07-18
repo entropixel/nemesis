@@ -6,6 +6,8 @@
 
 #include <SDL.h>
 
+#include "rndr.h"
+
 void rndr_rgb_to_hsl (unsigned char *res, unsigned char r, unsigned char g, unsigned char b)
 {
 	unsigned char h, s, l;
@@ -115,6 +117,47 @@ void rndr_shift_sprite (SDL_Surface *spr, unsigned char alpha, char hshift, char
 				rndr_hsl_to_rgb (rgb, hsl [0], hsl [1], hsl [2]);
 				*pix = (rgb [0] << f->Rshift) | (rgb [1] << f->Gshift) | (rgb [2] << f->Bshift) | (255 << f->Ashift);
 			} 
+		}
+
+	return;
+}
+
+void rndr_do_lighting (SDL_Renderer *rndr, light_t *l, unsigned char addr, unsigned char addg, unsigned char addb)
+{
+	// assume 16x10 tiles at 16x16 pixels each
+	int i, j; 
+	SDL_Rect r = { .w = 16, .h = 16 };
+
+	for (i = 0; i < 16; i++)
+		for (j = 0; j < 10; j++)
+		{
+			unsigned char rgb [3]; // eventual color for light
+			int hsum = 0, ssum = 0, count = 0, lsum = 0;
+			light_t *it = l;
+
+			r.x = i * 16;
+			r.y = j * 16;
+
+			while (it)
+			{
+				int sub = it->falloff * (abs (i - it->x) + abs (j - it->y));
+
+				hsum += (sub > it->hue) ? 0 : it->hue - sub;
+				ssum += (sub > it->sat) ? 0 : it->sat - sub;
+				lsum += (sub > it->bright) ? 0 : it->bright - sub;
+				count ++;
+
+				it = it->next;
+			}
+
+			rndr_hsl_to_rgb (rgb, hsum / count, ssum / count, lsum / count);
+
+			rgb [0] += (rgb [0] < 255 - addr) ? addr : 255 - rgb [0];
+			rgb [1] += (rgb [1] < 255 - addg) ? addg : 255 - rgb [1];
+			rgb [2] += (rgb [2] < 255 - addb) ? addb : 255 - rgb [2];
+
+			SDL_SetRenderDrawColor (rndr, rgb [0], rgb [1], rgb [2], 255);			
+			SDL_RenderFillRect (rndr, &r);
 		}
 
 	return;
