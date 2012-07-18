@@ -57,19 +57,14 @@ unsigned int keymask = 0;
 // shirt - 237
 // pants - 235
 
-light_t torch2 =
-{
-	1, 6,
-	0, 255, 200, 30,
-	NULL
-};
-
 light_t torch1 =
 {
 	8, 1,
-	128, 255, 200, 30,
-	&torch2
+	128, 200, 200, 30,
+	NULL
 };
+
+SDL_Texture *fonttex;
 
 int main (int argc, char **argv)
 {
@@ -110,6 +105,12 @@ int main (int argc, char **argv)
 	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr), &torch_anim, 0, ROT_DOWN);
 	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT);
 	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet);
+
+	// font
+	SDL_Surface *fontspr = IMG_Load ("img/gui/font.png");
+	fonttex = SDL_CreateTextureFromSurface (rndr, fontspr);
+	SDL_Texture *hwtext = rndr_make_text (rndr, "Nemesis PreAlpha");
+
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 
 	// ew.
@@ -251,7 +252,7 @@ int main (int argc, char **argv)
 			}
 
 		SDL_RenderCopy (rndr, torch->tex, &(torch->show), &(torch->dest));
-		SDL_RenderCopy (rndr, torchb->tex, &(torchb->show), &(torchb->dest));
+	//	SDL_RenderCopy (rndr, torchb->tex, &(torchb->show), &(torchb->dest));
 		SDL_RenderCopy (rndr, player->tex, &(player->show), &(player->dest));
 
 		if (renderlights)
@@ -260,11 +261,14 @@ int main (int argc, char **argv)
 		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
 		for (i = 0; i < 48 && renderdbg; i++)
 		{
+			SDL_Rect textdst = { 8, 8, 128, 8 };
 			SDL_Rect rtime = { .x = i * 2, .w = 2, .h = frametimes [i] * 2 };
 			rtime.y = 160 - rtime.h;
 
 			SDL_SetRenderDrawColor (rndr, (frametimes [i] > 8) ? 255 : 0, (frametimes [i] < 17) ? 255 : 0, 0, 128);
 			SDL_RenderFillRect (rndr, &rtime);
+			if (!i)
+				SDL_RenderCopy (rndr, hwtext, NULL, &textdst);
 		}
 		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 

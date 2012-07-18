@@ -3,6 +3,7 @@
    Unauthorized redistribution is prohibited. */
 
 #include <stdio.h>
+#include <string.h>
 
 #include <SDL.h>
 
@@ -120,6 +121,26 @@ void rndr_shift_sprite (SDL_Surface *spr, unsigned char alpha, char hshift, char
 		}
 
 	return;
+}
+
+extern SDL_Texture *fonttex;
+SDL_Texture *rndr_make_text (SDL_Renderer *rndr, const char *text)
+{
+	int i;
+	SDL_Texture *ret = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, strlen (text) * 8, 8);
+	SDL_SetTextureBlendMode (ret, SDL_BLENDMODE_ADD);
+	SDL_SetRenderTarget (rndr, ret);
+
+	for (i = 0; i < strlen (text); i++)
+	{
+		SDL_Rect src = { (text [i] & 0x0f) * 8, ((text [i] & 0xf0) >> 4) * 8, 8, 8 };
+		SDL_Rect dst = { i * 8, 0, 8, 8 };
+
+		SDL_RenderCopy (rndr, fonttex, &src, &dst);
+	}
+
+	SDL_SetRenderTarget (rndr, NULL);
+	return ret;
 }
 
 void rndr_do_lighting (SDL_Renderer *rndr, light_t *l, unsigned char addr, unsigned char addg, unsigned char addb)
