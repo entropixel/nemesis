@@ -17,7 +17,7 @@ typedef struct light_s
 } light_t;
 
 void rndr_shift_sprite (SDL_Surface *spr, unsigned char alpha, char hshift, char sshift, char lshift);
-SDL_Texture *rndr_make_text (SDL_Renderer *rndr, const char *text);
+SDL_Texture *rndr_make_text (SDL_Renderer *rndr, const char *text, SDL_Rect *inf);
 void rndr_do_lighting (SDL_Renderer *rndr, light_t *l);
 
 #endif // RNDR_H__

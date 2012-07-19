@@ -122,8 +122,12 @@ int main (int argc, char **argv)
 
 	// font
 	SDL_Surface *fontspr = IMG_Load ("img/gui/font.png");
+	SDL_Rect toptxtrct, bottxtrct;
 	fonttex = SDL_CreateTextureFromSurface (rndr, fontspr);
-	SDL_Texture *hwtext = rndr_make_text (rndr, "Nemesis PreAlpha");
+	SDL_Texture *titletxt = rndr_make_text (rndr, "Nemesis PreAlpha", &toptxtrct);
+	SDL_Texture *vertxt = rndr_make_text (rndr, __DATE__, &bottxtrct);
+	toptxtrct.x = toptxtrct.y = bottxtrct.x = 8;
+	bottxtrct.y = 24;
 
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 
@@ -275,14 +279,16 @@ int main (int argc, char **argv)
 		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
 		for (i = 0; i < 48 && renderdbg; i++)
 		{
-			SDL_Rect textdst = { 8, 8, 128, 8 };
 			SDL_Rect rtime = { .x = i * 2, .w = 2, .h = frametimes [i] * 2 };
 			rtime.y = 160 - rtime.h;
 
 			SDL_SetRenderDrawColor (rndr, (frametimes [i] > 8) ? 255 : 0, (frametimes [i] < 17) ? 255 : 0, 0, 128);
 			SDL_RenderFillRect (rndr, &rtime);
 			if (!i)
-				SDL_RenderCopy (rndr, hwtext, NULL, &textdst);
+			{
+				SDL_RenderCopy (rndr, titletxt, NULL, &toptxtrct);
+				SDL_RenderCopy (rndr, vertxt, NULL, &bottxtrct);
+			}
 		}
 		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 

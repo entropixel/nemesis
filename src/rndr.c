@@ -124,7 +124,7 @@ void rndr_shift_sprite (SDL_Surface *spr, unsigned char alpha, char hshift, char
 }
 
 extern SDL_Texture *fonttex;
-SDL_Texture *rndr_make_text (SDL_Renderer *rndr, const char *text)
+SDL_Texture *rndr_make_text (SDL_Renderer *rndr, const char *text, SDL_Rect *inf)
 {
 	int i;
 	SDL_Texture *ret = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, strlen (text) * 8, 8);
@@ -137,6 +137,12 @@ SDL_Texture *rndr_make_text (SDL_Renderer *rndr, const char *text)
 		SDL_Rect dst = { i * 8, 0, 8, 8 };
 
 		SDL_RenderCopy (rndr, fonttex, &src, &dst);
+	}
+
+	if (inf) // give them some info about the text if we want it
+	{
+		inf->h = 8;
+		inf->w = strlen (text) * 8;
 	}
 
 	SDL_SetRenderTarget (rndr, NULL);
