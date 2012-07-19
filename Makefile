@@ -3,8 +3,10 @@ CC = gcc
 SDL2_PATH = ~/sdl2/
 OPT = 0
 DBG = 3
-CFLAGS = $(shell $(SDL2_PATH)/bin/sdl2-config --cflags) -O$(OPT) -g$(DBG)
-LDFLAGS = $(shell $(SDL2_PATH)/bin/sdl2-config --libs) -lSDL2_image
+MYCFLAGS =
+MYLDFLAGS =
+CFLAGS = $(shell $(SDL2_PATH)/bin/sdl2-config --cflags) -O$(OPT) -g$(DBG) $(MYCFLAGS)
+LDFLAGS = $(shell $(SDL2_PATH)/bin/sdl2-config --libs) -lSDL2_image $(MYLDFLAGS)
 OBJDIR = obj
 OUT = nemesis
 

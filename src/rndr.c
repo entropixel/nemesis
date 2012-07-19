@@ -9,7 +9,7 @@
 
 #include "rndr.h"
 
-void rndr_rgb_to_hsl (unsigned char *res, unsigned char r, unsigned char g, unsigned char b)
+static inline void rndr_rgb_to_hsl (unsigned char *res, unsigned char r, unsigned char g, unsigned char b)
 {
 	unsigned char h, s, l;
 	unsigned char max = (((r > g) ? r : g) > b) ? ((r > g) ? r : g) : b;
@@ -42,7 +42,7 @@ void rndr_rgb_to_hsl (unsigned char *res, unsigned char r, unsigned char g, unsi
 #define HSLMUL(x,y) ((((unsigned int)(x)) * ((unsigned int)(y))) / 256)
 #define HSLDIV(x,y) ((((unsigned int)(x)) * 256) / ((unsigned int)(y)))
 
-void rndr_hsl_to_rgb (unsigned char *res, unsigned char h, unsigned char s, unsigned char l)
+static inline void rndr_hsl_to_rgb (unsigned char *res, unsigned char h, unsigned char s, unsigned char l)
 {
 	unsigned int sr, sg, sb, tmpr, tmpg, tmpb;
 	register unsigned int hh, ss, ll;
@@ -148,26 +148,31 @@ void rndr_do_lighting (SDL_Renderer *rndr, light_t *l)
 {
 	// assume 16x10 tiles at 16x16 pixels each
 	int i, j; 
+	unsigned char rgb [3];
+	int rsum, gsum, bsum, sub;
+	light_t *it;
 	SDL_Rect r = { .w = 16, .h = 16 };
 
 	for (i = 0; i < 16; i++)
 		for (j = 0; j < 10; j++)
 		{
-			unsigned char rgb [3];
-			int rsum = 0, gsum = 0, bsum = 0;
-			light_t *it = l;
+			rsum = gsum = bsum = 0;
+			it = l;
 
 			r.x = i * 16;
 			r.y = j * 16;
 
 			while (it)
 			{
-				int sub = it->falloff * (abs (i - it->x) + abs (j - it->y));
+				sub = it->falloff * (abs (i - it->x) + abs (j - it->y));
 
-				rndr_hsl_to_rgb (rgb, it->hue, it->sat, (sub > it->bright) ? 0 : it->bright - sub);
-				rsum += rgb [0];
-				gsum += rgb [1];
-				bsum += rgb [2];
+				if (sub < 255)
+				{
+					rndr_hsl_to_rgb (rgb, it->hue, it->sat, (sub > it->bright) ? 0 : it->bright - sub);
+					rsum += rgb [0];
+					gsum += rgb [1];
+					bsum += rgb [2];
+				}
 
 				it = it->next;
 			}
