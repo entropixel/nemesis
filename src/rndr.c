@@ -143,7 +143,8 @@ SDL_Texture *rndr_make_text (SDL_Renderer *rndr, const char *text)
 	return ret;
 }
 
-void rndr_do_lighting (SDL_Renderer *rndr, light_t *l, unsigned char addr, unsigned char addg, unsigned char addb)
+#define min(a,b) ((a < b) ? a : b)
+void rndr_do_lighting (SDL_Renderer *rndr, light_t *l)
 {
 	// assume 16x10 tiles at 16x16 pixels each
 	int i, j; 
@@ -152,8 +153,8 @@ void rndr_do_lighting (SDL_Renderer *rndr, light_t *l, unsigned char addr, unsig
 	for (i = 0; i < 16; i++)
 		for (j = 0; j < 10; j++)
 		{
-			unsigned char rgb [3]; // eventual color for light
-			int hsum = 0, ssum = 0, count = 0, lsum = 0;
+			unsigned char rgb [3];
+			int rsum = 0, gsum = 0, bsum = 0;
 			light_t *it = l;
 
 			r.x = i * 16;
@@ -163,21 +164,15 @@ void rndr_do_lighting (SDL_Renderer *rndr, light_t *l, unsigned char addr, unsig
 			{
 				int sub = it->falloff * (abs (i - it->x) + abs (j - it->y));
 
-				hsum += (sub > it->hue) ? 0 : it->hue - sub;
-				ssum += (sub > it->sat) ? 0 : it->sat - sub;
-				lsum += (sub > it->bright) ? 0 : it->bright - sub;
-				count ++;
+				rndr_hsl_to_rgb (rgb, it->hue, it->sat, (sub > it->bright) ? 0 : it->bright - sub);
+				rsum += rgb [0];
+				gsum += rgb [1];
+				bsum += rgb [2];
 
 				it = it->next;
 			}
 
-			rndr_hsl_to_rgb (rgb, hsum / count, ssum / count, lsum / count);
-
-			rgb [0] += (rgb [0] < 255 - addr) ? addr : 255 - rgb [0];
-			rgb [1] += (rgb [1] < 255 - addg) ? addg : 255 - rgb [1];
-			rgb [2] += (rgb [2] < 255 - addb) ? addb : 255 - rgb [2];
-
-			SDL_SetRenderDrawColor (rndr, rgb [0], rgb [1], rgb [2], 255);			
+			SDL_SetRenderDrawColor (rndr, min (255, rsum), min (255, gsum), min (255, bsum), 255);			
 			SDL_RenderFillRect (rndr, &r);
 		}
 

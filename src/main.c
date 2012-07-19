@@ -57,11 +57,25 @@ unsigned int keymask = 0;
 // shirt - 237
 // pants - 235
 
+light_t torch2 =
+{
+	1, 6,
+	28, 200, 180, 30,
+	NULL
+};
+
 light_t torch1 =
 {
 	8, 1,
-	128, 200, 200, 30,
-	NULL
+	28, 200, 180, 30,
+	&torch2
+};
+
+light_t ambience =
+{
+	0, 0,
+	0, 0, 30, 0,
+	&torch1
 };
 
 SDL_Texture *fonttex;
@@ -252,11 +266,11 @@ int main (int argc, char **argv)
 			}
 
 		SDL_RenderCopy (rndr, torch->tex, &(torch->show), &(torch->dest));
-	//	SDL_RenderCopy (rndr, torchb->tex, &(torchb->show), &(torchb->dest));
+		SDL_RenderCopy (rndr, torchb->tex, &(torchb->show), &(torchb->dest));
 		SDL_RenderCopy (rndr, player->tex, &(player->show), &(player->dest));
 
 		if (renderlights)
-			rndr_do_lighting (rndr, &torch1, 40, 40, 40);
+			rndr_do_lighting (rndr, &ambience);
 
 		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
 		for (i = 0; i < 48 && renderdbg; i++)
