@@ -19,5 +19,21 @@ typedef struct
 } tile_t;
 
 extern tileoffs_t dungeon_tileoffs [];
+enum
+{
+	dun_floor = 0,
+	dun_wall_n = 1,
+	dun_wall_e = 4,
+	dun_wall_s = 7,
+	dun_wall_w = 10,
+	dun_wall_ine = 13,
+	dun_wall_inw = 16,
+	dun_wall_ise = 19,
+	dun_wall_isw = 22,
+	dun_wall_one,
+	dun_wall_onw,
+	dun_wall_ose,
+	dun_wall_osw
+};
 
 #endif // TILE_H__

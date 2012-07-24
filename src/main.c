@@ -18,24 +18,33 @@
 #include "rndr.h"
 
 tile_t levtiles [16] [10];
-int levtiles_offs [16] [10] = // FUCK
+
+int levtiles_offs [10] [16] = // FUCK :(
 {
-	{ 26, 6, 6, 6, 6, 6, 6, 6, 6, 18 },
-	{ 10, 25, 5, 5, 5, 5, 5, 5, 17, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 9, 0, 0, 0, 0, 0, 0, 1, 2 },
-	{ 10, 29, 13, 13, 13, 13, 13, 13, 21, 2 },
-	{ 30, 14, 14, 14, 14, 14, 14, 14, 14, 22 }
+	{ dun_wall_inw + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2,
+	  dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2,
+	  dun_wall_n + 2, dun_wall_ine + 2 },
+	{ dun_wall_w + 2, dun_wall_inw + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1,
+	  dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1,
+	  dun_wall_ine + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_inw, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n,
+	  dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_ine, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_isw, dun_wall_s, dun_wall_s, dun_wall_s, dun_wall_s, dun_wall_s, dun_wall_s,
+	  dun_wall_s, dun_wall_s, dun_wall_s, dun_wall_s, dun_wall_ise, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_isw + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1,
+	  dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1,
+	  dun_wall_ise + 1, dun_wall_e + 2 },
+	{ dun_wall_isw + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2,
+	  dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2,
+	  dun_wall_s + 2, dun_wall_ise + 2 }
 };
 
 SDL_Window *win = NULL;
@@ -118,7 +127,32 @@ int main (int argc, char **argv)
 	obj_t *player = obj_create (32, 32, SDL_CreateTextureFromSurface (rndr, plsprite), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
 	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr), &torch_anim, 0, ROT_DOWN);
 	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT);
+
+	// for now, render the level tiles to a seperate SDL_Texture, to speed things up
 	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet);
+	SDL_Texture *tiletarg = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 256, 160);
+
+	{
+		int i, j;
+		SDL_Rect tilesrc = { .w = 16, .h = 16 };
+		SDL_Rect tiledst = { .w = 16, .h = 16 };
+
+		SDL_SetRenderTarget (rndr, tiletarg);
+		for (i = 0; i < 16; i++)
+			for (j = 0; j < 10; j++)
+			{
+				levtiles [i] [j].sheet = tiletex;
+				levtiles [i] [j].offs = dungeon_tileoffs [levtiles_offs [j] [i]];
+
+				tilesrc.x = levtiles [i] [j].offs.x * 16;
+				tilesrc.y = levtiles [i] [j].offs.y * 16;
+				tiledst.x = i * 16;
+				tiledst.y = j * 16;
+				SDL_RenderCopy (rndr, levtiles [i] [j].sheet, &tilesrc, &tiledst);
+			}
+
+		SDL_SetRenderTarget (rndr, NULL);
+	}
 
 	// font
 	SDL_Surface *fontspr = IMG_Load ("img/gui/font.png");
@@ -130,15 +164,6 @@ int main (int argc, char **argv)
 	bottxtrct.y = 24;
 
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
-
-	// ew.
-	int i, j;
-	for (i = 0; i < 16; i++)
-		for (j = 0; j < 10; j++)
-		{
-			levtiles [i] [j].sheet = tiletex;
-			levtiles [i] [j].offs = dungeon_tileoffs [levtiles_offs [i] [j]];
-		}
 
 	SDL_Event ev;
 
@@ -257,17 +282,7 @@ int main (int argc, char **argv)
 		SDL_SetRenderDrawColor (rndr, 0, 0, 0, 255);
 		SDL_RenderClear (rndr);
 
-		SDL_Rect tilerct = { .w = 16, .h = 16 };
-		SDL_Rect tiledst = { .w = 16, .h = 16 };
-		for (i = 0; i < 16; i++)
-			for (j = 0; j < 10; j++)
-			{
-				tilerct.x = levtiles [i] [j].offs.x * 16;
-				tilerct.y = levtiles [i] [j].offs.y * 16;
-				tiledst.x = i * 16;
-				tiledst.y = j * 16;
-				SDL_RenderCopy (rndr, levtiles [i] [j].sheet, &tilerct, &tiledst);
-			}
+		SDL_RenderCopy (rndr, tiletarg, NULL, NULL);
 
 		SDL_RenderCopy (rndr, torch->tex, &(torch->show), &(torch->dest));
 		SDL_RenderCopy (rndr, torchb->tex, &(torchb->show), &(torchb->dest));
@@ -277,6 +292,7 @@ int main (int argc, char **argv)
 			rndr_do_lighting (rndr, &ambience);
 
 		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
+		int i;
 		for (i = 0; i < 48 && renderdbg; i++)
 		{
 			SDL_Rect rtime = { .x = i * 2, .w = 2, .h = frametimes [i] * 2 };
