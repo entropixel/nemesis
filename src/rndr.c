@@ -4,11 +4,14 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
 #include <SDL.h>
 
+#include "anim.h"
+#include "obj.h"
 #include "rndr.h"
+
+extern SDL_Renderer *rndr;
 
 static inline void rndr_rgb_to_hsl (unsigned char *res, unsigned char r, unsigned char g, unsigned char b)
 {
@@ -125,7 +128,7 @@ void rndr_shift_sprite (SDL_Surface *spr, unsigned char alpha, char hshift, char
 }
 
 extern SDL_Texture *fonttex;
-SDL_Texture *rndr_make_text (SDL_Renderer *rndr, const char *text, SDL_Rect *inf)
+SDL_Texture *rndr_make_text (const char *text, SDL_Rect *inf)
 {
 	int i;
 	SDL_Texture *ret = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, strlen (text) * 8, 8);
@@ -150,8 +153,27 @@ SDL_Texture *rndr_make_text (SDL_Renderer *rndr, const char *text, SDL_Rect *inf
 	return ret;
 }
 
+void rndr_do_tiles (SDL_Texture *tiles) // todo, heh
+{
+	SDL_RenderCopy (rndr, tiles, NULL, NULL);
+	return;
+}
+
+void rndr_do_objs (void)
+{
+	obj_t *it = obj_list_head;
+
+	while (it)
+	{
+		SDL_RenderCopy (rndr, it->tex, &(it->show), &(it->dest));
+		it = it->next;
+	}
+
+	return;
+}
+
 #define min(a,b) ((a < b) ? a : b)
-void rndr_do_lighting (SDL_Renderer *rndr, light_t *l)
+void rndr_do_lighting (light_t *l)
 {
 	// assume 16x10 tiles at 16x16 pixels each
 	int i, j; 
@@ -189,5 +211,36 @@ void rndr_do_lighting (SDL_Renderer *rndr, light_t *l)
 			SDL_RenderFillRect (rndr, &r);
 		}
 
+	return;
+}
+
+void rndr_do_debug (unsigned short *frametimes)
+{
+	int i;
+	static SDL_Rect toprct = { .x = 8, .y = 8 }, botrct = { .x = 8, .y = 24 };
+	static SDL_Texture *titletxt = NULL, *vertxt = NULL;
+
+	if (!titletxt && !vertxt)
+	{
+		titletxt = rndr_make_text ("Nemesis PreAlpha", &toprct);
+		vertxt = rndr_make_text (__DATE__, &botrct);
+	}
+
+	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
+	for (i = 0; i < 48; i++)
+	{
+		SDL_Rect rtime = { .x = i * 2, .w = 2, .h = frametimes [i] * 2 };
+		rtime.y = 160 - rtime.h;
+
+		SDL_SetRenderDrawColor (rndr, (frametimes [i] > 8) ? 255 : 0, (frametimes [i] < 17) ? 255 : 0, 0, 128);
+		SDL_RenderFillRect (rndr, &rtime);
+		if (!i)
+		{
+			SDL_RenderCopy (rndr, titletxt, NULL, &toprct);
+			SDL_RenderCopy (rndr, vertxt, NULL, &botrct);
+		}
+	}
+
+	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 	return;
 }

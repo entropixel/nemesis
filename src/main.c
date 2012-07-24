@@ -88,6 +88,8 @@ light_t ambience =
 };
 
 SDL_Texture *fonttex;
+char running = 1;
+unsigned int curtick = 0;
 
 int main (int argc, char **argv)
 {
@@ -156,12 +158,7 @@ int main (int argc, char **argv)
 
 	// font
 	SDL_Surface *fontspr = IMG_Load ("img/gui/font.png");
-	SDL_Rect toptxtrct, bottxtrct;
 	fonttex = SDL_CreateTextureFromSurface (rndr, fontspr);
-	SDL_Texture *titletxt = rndr_make_text (rndr, "Nemesis PreAlpha", &toptxtrct);
-	SDL_Texture *vertxt = rndr_make_text (rndr, __DATE__, &bottxtrct);
-	toptxtrct.x = toptxtrct.y = bottxtrct.x = 8;
-	bottxtrct.y = 24;
 
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 
@@ -170,8 +167,6 @@ int main (int argc, char **argv)
 	char renderlights = 1, renderdbg = 0; // debug stuff, yay
 	unsigned short frametimes [48] = { 0 };
 
-	char running = 1;
-	unsigned int curtick = 0;
 	while (running)
 	{
 		int preticks = SDL_GetTicks (), postticks;
@@ -228,6 +223,9 @@ int main (int argc, char **argv)
 
 		if (keymask)
 		{
+			if (player->frame == char_anim_stand)
+				obj_set_frame (player, char_anim_walk1);
+
 			switch (keymask)
 			{
 				case UPK:
@@ -267,11 +265,9 @@ int main (int argc, char **argv)
 					player->y -= 1.0f;
 				break;
 				default:
+					obj_set_frame (player, char_anim_stand);
 				break;
 			}
-
-			if (player->frame == char_anim_stand)
-				obj_set_frame (player, char_anim_walk1);
 
 			player->dest.x = (short) player->x;
 			player->dest.y = (short) player->y;
@@ -282,31 +278,14 @@ int main (int argc, char **argv)
 		SDL_SetRenderDrawColor (rndr, 0, 0, 0, 255);
 		SDL_RenderClear (rndr);
 
-		SDL_RenderCopy (rndr, tiletarg, NULL, NULL);
-
-		SDL_RenderCopy (rndr, torch->tex, &(torch->show), &(torch->dest));
-		SDL_RenderCopy (rndr, torchb->tex, &(torchb->show), &(torchb->dest));
-		SDL_RenderCopy (rndr, player->tex, &(player->show), &(player->dest));
+		rndr_do_tiles (tiletarg);
+		rndr_do_objs ();
 
 		if (renderlights)
-			rndr_do_lighting (rndr, &ambience);
+			rndr_do_lighting (&ambience);
 
-		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
-		int i;
-		for (i = 0; i < 48 && renderdbg; i++)
-		{
-			SDL_Rect rtime = { .x = i * 2, .w = 2, .h = frametimes [i] * 2 };
-			rtime.y = 160 - rtime.h;
-
-			SDL_SetRenderDrawColor (rndr, (frametimes [i] > 8) ? 255 : 0, (frametimes [i] < 17) ? 255 : 0, 0, 128);
-			SDL_RenderFillRect (rndr, &rtime);
-			if (!i)
-			{
-				SDL_RenderCopy (rndr, titletxt, NULL, &toptxtrct);
-				SDL_RenderCopy (rndr, vertxt, NULL, &bottxtrct);
-			}
-		}
-		SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
+		if (renderdbg)
+			rndr_do_debug (frametimes);
 
 		SDL_RenderPresent (rndr);
 

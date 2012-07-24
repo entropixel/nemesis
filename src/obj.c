@@ -11,6 +11,8 @@
 #include "anim.h"
 #include "obj.h"
 
+obj_t *obj_list_head = NULL, *obj_list_tail = NULL;
+
 obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, unsigned short frame, unsigned char rot)
 {
 	obj_t *ret = malloc (sizeof (obj_t));
@@ -28,8 +30,19 @@ obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, unsigned sh
 	ret->show.h = ret->dest.h = ret->anim->h;
 	ret->dest.x = (short) x;
 	ret->dest.y = (short) y;
+	ret->next = NULL;
 	obj_set_frame (ret, frame);
 	obj_set_rot (ret, rot);
+
+	if (!obj_list_head)
+	{
+		obj_list_head = obj_list_tail = ret;
+	}
+	else
+	{
+		obj_list_tail->next = ret;
+		obj_list_tail = ret;
+	}
 
 	return ret;
 }

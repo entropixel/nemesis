@@ -21,12 +21,14 @@ typedef struct obj_s
 	float x;
 	float y;
 	void *thinker; // TODO
-	struct obj_s *next; // TODO
+	struct obj_s *next;
 } obj_t;
 
 obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, unsigned short frame, unsigned char rot);
 void obj_set_frame (obj_t *obj, unsigned short frame);
 void obj_set_rot (obj_t *obj, unsigned char rot);
 void obj_adv_frame (obj_t *obj);
+
+extern obj_t *obj_list_head, *obj_list_tail;
 
 #endif // OBJ_H__
