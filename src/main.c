@@ -16,6 +16,7 @@
 #include "obj.h"
 #include "tile.h"
 #include "rndr.h"
+#include "input.h"
 
 tile_t levtiles [16] [10];
 
@@ -50,16 +51,6 @@ int levtiles_offs [10] [16] = // FUCK :(
 SDL_Window *win = NULL;
 SDL_Renderer *rndr = NULL;
 
-enum
-{
-	UPK = 1,
-	RIGHTK = 2,
-	DOWNK = 4,
-	LEFTK = 8
-};
-
-unsigned int keymask = 0;
-
 // alphas: 
 // hair - 232
 // eyes - 242
@@ -90,6 +81,7 @@ light_t ambience =
 SDL_Texture *fonttex;
 char running = 1;
 unsigned int curtick = 0;
+char renderlights = 1, renderdbg = 0; // debug stuff, yay
 
 int main (int argc, char **argv)
 {
@@ -106,7 +98,7 @@ int main (int argc, char **argv)
 	}
 
 	if (!(win = SDL_CreateWindow ("nemesis (" __DATE__ ")", SDL_WINDOWPOS_CENTERED,
-	                              SDL_WINDOWPOS_CENTERED, 256, 160, 0)))
+	                              SDL_WINDOWPOS_CENTERED, 512, 320, 0)))
 	{
 		fprintf (stderr, "SDL_CreateWindow failed (%s)\n", SDL_GetError ());
 		return 1;
@@ -118,6 +110,8 @@ int main (int argc, char **argv)
 		return 1;
 	}
 
+	SDL_Texture *screen = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 256, 160);
+
 	// testing crap now :D
 	SDL_Surface *plsprite = IMG_Load ("img/objects/player/male/nosleeve_shorts_short.png");
 	rndr_shift_sprite (plsprite, 232, 20, 0, -50);
@@ -126,9 +120,9 @@ int main (int argc, char **argv)
 	rndr_shift_sprite (plsprite, 235, 80, 0, -30);
 	SDL_Surface *torchspr = IMG_Load ("img/objects/dungeon/adungeon/torches.png");
 	SDL_Surface *tilesheet = IMG_Load ("img/tiles/dungeon/adungeon.png");
-	obj_t *player = obj_create (32, 32, SDL_CreateTextureFromSurface (rndr, plsprite), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
 	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr), &torch_anim, 0, ROT_DOWN);
 	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT);
+	obj_t *player = obj_create (32, 32, SDL_CreateTextureFromSurface (rndr, plsprite), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
 
 	// for now, render the level tiles to a seperate SDL_Texture, to speed things up
 	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet);
@@ -164,62 +158,13 @@ int main (int argc, char **argv)
 
 	SDL_Event ev;
 
-	char renderlights = 1, renderdbg = 0; // debug stuff, yay
 	unsigned short frametimes [48] = { 0 };
 
 	while (running)
 	{
 		int preticks = SDL_GetTicks (), postticks;
 
-		while (SDL_PollEvent (&ev))
-		{
-			switch (ev.type)
-			{
-				case SDL_KEYUP:
-					switch (ev.key.keysym.sym)
-					{
-						case SDLK_UP:
-							keymask &= ~(UPK);
-							break;
-						case SDLK_RIGHT:
-							keymask &= ~(RIGHTK);
-							break;
-						case SDLK_DOWN:
-							keymask &= ~(DOWNK);
-							break;
-						case SDLK_LEFT:
-							keymask &= ~(LEFTK);
-							break;
-						case SDLK_F2:
-							renderlights = !renderlights;
-							break;
-						case SDLK_F3:
-							renderdbg = !renderdbg;
-							break;
-					}
-				break;
-				case SDL_KEYDOWN:
-					switch (ev.key.keysym.sym)
-					{
-						case SDLK_UP:
-							keymask |= UPK;
-							break;
-						case SDLK_RIGHT:
-							keymask |= RIGHTK;
-							break;
-						case SDLK_DOWN:
-							keymask |= DOWNK;
-							break;
-						case SDLK_LEFT:
-							keymask |= LEFTK;
-							break;
-					}
-				break;
-				case SDL_QUIT:
-					running = 0;
-				break;
-			}
-		}
+		input_get (&ev);
 
 		if (keymask)
 		{
@@ -277,6 +222,7 @@ int main (int argc, char **argv)
 
 		SDL_SetRenderDrawColor (rndr, 0, 0, 0, 255);
 		SDL_RenderClear (rndr);
+		SDL_SetRenderTarget (rndr, screen);
 
 		rndr_do_tiles (tiletarg);
 		rndr_do_objs ();
@@ -286,6 +232,9 @@ int main (int argc, char **argv)
 
 		if (renderdbg)
 			rndr_do_debug (frametimes);
+
+		SDL_SetRenderTarget (rndr, NULL);
+		SDL_RenderCopy (rndr, screen, NULL, NULL);
 
 		SDL_RenderPresent (rndr);
 
