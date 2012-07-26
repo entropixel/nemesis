@@ -20,6 +20,7 @@ typedef struct obj_s
 
 	float x;
 	float y;
+	SDL_Rect hitbox;
 	void *thinker; // TODO
 	struct obj_s *next;
 } obj_t;

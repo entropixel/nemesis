@@ -15,7 +15,7 @@ typedef struct
 {
 	SDL_Texture *sheet;
 	tileoffs_t offs;
-	unsigned short flags; // todo
+	unsigned short flags;
 } tile_t;
 
 extern tileoffs_t dungeon_tileoffs [];
@@ -34,6 +34,11 @@ enum
 	dun_wall_onw,
 	dun_wall_ose,
 	dun_wall_osw
+};
+
+enum
+{
+	TF_SOLID = 1 << 0
 };
 
 #endif // TILE_H__
