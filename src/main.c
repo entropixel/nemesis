@@ -60,21 +60,21 @@ SDL_Renderer *rndr = NULL;
 light_t torch2 =
 {
 	1, 6,
-	28, 200, 180, 30,
+	28, 100, 180, 24,
 	NULL
 };
 
 light_t torch1 =
 {
 	8, 1,
-	28, 200, 180, 30,
+	28, 100, 180, 24,
 	&torch2
 };
 
 light_t ambience =
 {
 	0, 0,
-	0, 0, 30, 0,
+	0, 0, 48, 0,
 	&torch1
 };
 
