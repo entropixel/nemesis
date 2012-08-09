@@ -4,9 +4,13 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include <SDL.h>
 
+#include "miniz.h"
 #include "anim.h"
 #include "obj.h"
 #include "rndr.h"
@@ -98,31 +102,97 @@ static inline void rndr_hsl_to_rgb (unsigned char *res, unsigned char h, unsigne
 	return;
 }
 
-// shifts all pixels in the sprite that have the specified alpha value
-void rndr_shift_sprite (SDL_Surface *spr, unsigned char alpha, char hshift, char sshift, char lshift)
+nif_t *rndr_nif_load (const char *path)
 {
-	SDL_PixelFormat *f = spr->format;
-	int i, j;
+	int fd, totalread = 0, tmpread, zret, i = 0;
+	char id [4];
+	unsigned short width, height;
+	unsigned long imglen, zimglen;
+	unsigned int zimglen32, numentr;
+	unsigned char *img, *zimg;
+	SDL_PixelFormat *f;
+	nif_t *ret;
 
-	for (i = 0; i < spr->w; i++)
-		for (j = 0; j < spr->h; j++)
-		{
-			unsigned int *pix = spr->pixels + (j * spr->w * f->BytesPerPixel) + (i * f->BytesPerPixel);
+	if ((fd = open (path, O_RDONLY)) < 0)
+		return NULL;
 
-			if ((*pix & f->Amask) >> f->Ashift == alpha)
-			{
-				unsigned char hsl [3];
-				unsigned char rgb [3];
-				
-				// convert pixel's rgb to hsl, shift, and reconvert
-				rndr_rgb_to_hsl (hsl, (*pix & f->Rmask) >> f->Rshift, (*pix & f->Gmask) >> f->Gshift, (*pix & f->Bmask) >> f->Bshift);
-				hsl [0] += hshift;
-				hsl [1] += sshift;
-				hsl [2] += lshift;
-				rndr_hsl_to_rgb (rgb, hsl [0], hsl [1], hsl [2]);
-				*pix = (rgb [0] << f->Rshift) | (rgb [1] << f->Gshift) | (rgb [2] << f->Bshift) | (255 << f->Ashift);
-			} 
-		}
+	read (fd, id, 4);
+	if (strncmp (id, "nif\0", 4))
+		return NULL;
+
+	if (read (fd, &width, 2) != 2 || read (fd, &height, 2) != 2 || read (fd, &zimglen32, 4) != 4)
+		return NULL;
+
+	imglen = width * height * 4;
+	zimglen = zimglen32;
+	img = malloc (imglen);
+	zimg = malloc (zimglen);
+	if (!img || !zimg)
+		return NULL;
+
+	do
+	{
+		if ((tmpread = read (fd, zimg + totalread, zimglen - totalread)) < 0)
+			break;
+		else
+			totalread += tmpread;
+	} while (totalread < zimglen);
+
+	// return NULL on failure to read all:
+	if (totalread != zimglen)
+		return NULL;
+
+	if ((zret = uncompress (img, &imglen, zimg, zimglen)) != Z_OK)
+	{
+		fprintf (stderr, "rndr_nif_load: Error decompressing %s data (%s)\n", path, zError (zret));
+		return NULL;
+	}
+
+	free (zimg);
+
+	ret = malloc (sizeof (nif_t));
+	ret->sur = SDL_CreateRGBSurfaceFrom (img, width, height, 32, width * 4, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+
+	// load shifts into tables
+	while (read (fd, &numentr, 4) == 4 && i < 32)
+	{
+		int j;
+
+		ret->shifts [i].numentr = numentr;
+		ret->shifts [i].x = malloc (numentr * 2);
+		ret->shifts [i].y = malloc (numentr * 2);
+
+		for (j = 0; j < numentr; j++)
+			if (read (fd, &(ret->shifts [i].x [j]), 2) != 2 || read (fd, &(ret->shifts [i].y [j]), 2) != 2)
+				break;
+
+		i ++;
+	}
+
+	return ret;
+}
+
+// shifts all pixels in specified shift group
+void rndr_nif_shift (nif_t *spr, int g, char hshift, char sshift, char lshift)
+{
+	SDL_PixelFormat *f = spr->sur->format;
+	int i;
+
+	for (i = 0; i < spr->shifts [g].numentr; i++)
+	{
+		unsigned int *pix = spr->sur->pixels + (spr->shifts [g].y [i] * spr->sur->w * f->BytesPerPixel) + (spr->shifts [g].x [i] * f->BytesPerPixel);
+
+		unsigned char hsl [3];
+		unsigned char rgb [3];
+			
+		// convert pixel's rgb to hsl, shift, and reconvert
+		rndr_rgb_to_hsl (hsl, (*pix & f->Rmask) >> f->Rshift, (*pix & f->Gmask) >> f->Gshift, (*pix & f->Bmask) >> f->Bshift);
+		hsl [0] += hshift;
+		hsl [1] += sshift;
+		hsl [2] += lshift;
+		rndr_hsl_to_rgb (rgb, hsl [0], hsl [1], hsl [2]);
+		*pix = (rgb [0] << f->Rshift) | (rgb [1] << f->Gshift) | (rgb [2] << f->Bshift) | (255 << f->Ashift);
+	}
 
 	return;
 }

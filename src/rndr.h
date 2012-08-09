@@ -16,7 +16,19 @@ typedef struct light_s
 	struct light_s *next;
 } light_t;
 
-void rndr_shift_sprite (SDL_Surface *spr, unsigned char alpha, char hshift, char sshift, char lshift);
+typedef struct
+{
+	SDL_Surface *sur;
+	struct
+	{
+		unsigned int numentr;
+		unsigned short *x;
+		unsigned short *y;
+	} shifts [32];
+} nif_t;
+
+nif_t *rndr_nif_load (const char *path);
+void rndr_nif_shift (nif_t *spr, int g, char hshift, char sshift, char lshift);
 SDL_Texture *rndr_make_text (const char *text, SDL_Rect *inf);
 void rndr_do_tiles (SDL_Texture *tiles);
 void rndr_do_objs (void);

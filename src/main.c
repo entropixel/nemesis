@@ -6,7 +6,6 @@
 #include <stdlib.h>
 
 #include <SDL.h>
-#include <SDL_image.h>
 
 #if !SDL_VERSION_ATLEAST(2,0,0)
 #error "Need SDL 2.0"
@@ -51,12 +50,6 @@ int levtiles_offs [10] [16] = // FUCK :(
 SDL_Window *win = NULL;
 SDL_Renderer *rndr = NULL;
 
-// alphas: 
-// hair - 232
-// eyes - 242
-// shirt - 237
-// pants - 235
-
 light_t torch2 =
 {
 	1, 6,
@@ -91,12 +84,6 @@ int main (int argc, char **argv)
 		return 1;
 	}
 
-	if (!(IMG_Init (IMG_INIT_PNG) & IMG_INIT_PNG))
-	{
-		fprintf (stderr, "IMG_Init failed (%s)\n", IMG_GetError ());
-		return 1;
-	}
-
 	if (!(win = SDL_CreateWindow ("nemesis (" __DATE__ ")", SDL_WINDOWPOS_CENTERED,
 	                              SDL_WINDOWPOS_CENTERED, 512, 320, 0)))
 	{
@@ -113,23 +100,23 @@ int main (int argc, char **argv)
 	SDL_Texture *screen = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 256, 160);
 
 	// testing crap now :D
-	SDL_Surface *plsprite = IMG_Load ("img/objects/player/male/nosleeve_shorts_short.png");
-	rndr_shift_sprite (plsprite, 232, 20, 0, -50);
-	rndr_shift_sprite (plsprite, 242, 160, 0, 0);
-	rndr_shift_sprite (plsprite, 237, 77, 0, -30);
-	rndr_shift_sprite (plsprite, 235, 80, 0, -30);
-	SDL_Surface *torchspr = IMG_Load ("img/objects/dungeon/adungeon/torches.png");
-	SDL_Surface *tilesheet = IMG_Load ("img/tiles/dungeon/adungeon.png");
-	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr), &torch_anim, 0, ROT_DOWN);
+	nif_t *plsprite = rndr_nif_load ("img/objects/player/male/male.nif");
+	rndr_nif_shift (plsprite, 0, 160, 0, 0);
+	rndr_nif_shift (plsprite, 1, 20, 0, -50);
+	rndr_nif_shift (plsprite, 2, 77, 0, -30);
+	rndr_nif_shift (plsprite, 3, 77, 0, -30);
+	nif_t *torchspr = rndr_nif_load ("img/objects/dungeon/adungeon/torches.nif");
+	nif_t *tilesheet = rndr_nif_load ("img/tiles/dungeon/adungeon.nif");
+	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr->sur), &torch_anim, 0, ROT_DOWN);
 	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT);
-	obj_t *player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
+	obj_t *player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
 	player->hitbox.w = 16;
 	player->hitbox.h = 16;
 	player->hitbox.x = ((short) player->x) + 8;
 	player->hitbox.y = ((short) player->y) + 16;
 
 	// for now, render the level tiles to a seperate SDL_Texture, to speed things up
-	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet);
+	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet->sur);
 	SDL_Texture *tiletarg = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 256, 160);
 
 	{
@@ -159,8 +146,8 @@ int main (int argc, char **argv)
 	}
 
 	// font
-	SDL_Surface *fontspr = IMG_Load ("img/gui/font.png");
-	fonttex = SDL_CreateTextureFromSurface (rndr, fontspr);
+	nif_t *fontspr = rndr_nif_load ("img/gui/font.nif");
+	fonttex = SDL_CreateTextureFromSurface (rndr, fontspr->sur);
 
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 
@@ -276,7 +263,6 @@ int main (int argc, char **argv)
 
 	SDL_DestroyRenderer (rndr);
 	SDL_DestroyWindow (win);
-	IMG_Quit ();
 	SDL_Quit ();
 	return 0;
 }

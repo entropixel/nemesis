@@ -8,4 +8,4 @@ i686-w64-mingw32-strip nemesis.exe
 
 zip -r /tmp/$zipname nemesis.exe img/*
 cd $SDL2/bin
-zip /tmp/$zipname *dll
+zip /tmp/$zipname SDL2.dll
