@@ -15,6 +15,13 @@
 #include "obj.h"
 #include "rndr.h"
 
+#ifdef WIN32
+#include <io.h>
+#define set_binary_mode(f) setmode (f, O_BINARY)
+#else
+#define set_binary_mode(f)
+#endif
+
 extern SDL_Renderer *rndr;
 
 static inline void rndr_rgb_to_hsl (unsigned char *res, unsigned char r, unsigned char g, unsigned char b)
@@ -109,26 +116,27 @@ nif_t *rndr_nif_load (const char *path)
 	unsigned short width, height;
 	unsigned long imglen, zimglen;
 	unsigned int zimglen32, numentr;
-	unsigned char *img, *zimg;
-	SDL_PixelFormat *f;
-	nif_t *ret;
+	unsigned char *img = NULL, *zimg = NULL;
+	nif_t *ret = NULL;
 
 	if ((fd = open (path, O_RDONLY)) < 0)
-		return NULL;
+		goto rndr_nif_load_err;
+
+	set_binary_mode (fd);
 
 	read (fd, id, 4);
 	if (strncmp (id, "nif\0", 4))
-		return NULL;
+		goto rndr_nif_load_err;
 
 	if (read (fd, &width, 2) != 2 || read (fd, &height, 2) != 2 || read (fd, &zimglen32, 4) != 4)
-		return NULL;
+		goto rndr_nif_load_err;
 
 	imglen = width * height * 4;
 	zimglen = zimglen32;
 	img = malloc (imglen);
 	zimg = malloc (zimglen);
 	if (!img || !zimg)
-		return NULL;
+		goto rndr_nif_load_err;
 
 	do
 	{
@@ -138,19 +146,24 @@ nif_t *rndr_nif_load (const char *path)
 			totalread += tmpread;
 	} while (totalread < zimglen);
 
-	// return NULL on failure to read all:
 	if (totalread != zimglen)
-		return NULL;
+		goto rndr_nif_load_err;
 
 	if ((zret = uncompress (img, &imglen, zimg, zimglen)) != Z_OK)
 	{
 		fprintf (stderr, "rndr_nif_load: Error decompressing %s data (%s)\n", path, zError (zret));
-		return NULL;
+		goto rndr_nif_load_err;
 	}
 
 	free (zimg);
+	zimg = NULL;
 
 	ret = malloc (sizeof (nif_t));
+	if (!ret)
+		goto rndr_nif_load_err;
+
+	memset (ret, 0, sizeof (nif_t));
+
 	ret->sur = SDL_CreateRGBSurfaceFrom (img, width, height, 32, width * 4, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
 	// load shifts into tables
@@ -170,6 +183,23 @@ nif_t *rndr_nif_load (const char *path)
 	}
 
 	return ret;
+
+	rndr_nif_load_err:
+	close (fd);
+	free (img);
+	free (zimg);
+
+	if (ret && ret->sur)
+		SDL_FreeSurface (ret->sur);
+
+	for (i = 0; i < 32 && ret; i++)
+	{
+		free (ret->shifts [i].x);
+		free (ret->shifts [i].y);
+	}
+
+	free (ret);
+	return NULL;
 }
 
 // shifts all pixels in specified shift group
