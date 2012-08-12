@@ -14,9 +14,9 @@ typedef struct obj_s
 
 	// animation stuff
 	anim_t *anim;
-	unsigned char frame; // Points to index in anim->frames
-	unsigned char rot; // Points to index in anim->rots
-	char frametics; // How many more tics to stay on current frame
+	uint8 frame; // Point32 to index in anim->frames
+	uint8 rot; // Point32 to index in anim->rots
+	uint8 frametics; // How many more tics to stay on current frame
 
 	float x;
 	float y;
@@ -25,9 +25,9 @@ typedef struct obj_s
 	struct obj_s *next;
 } obj_t;
 
-obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, unsigned short frame, unsigned char rot);
-void obj_set_frame (obj_t *obj, unsigned short frame);
-void obj_set_rot (obj_t *obj, unsigned char rot);
+obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 frame, uint8 rot);
+void obj_set_frame (obj_t *obj, uint16 frame);
+void obj_set_rot (obj_t *obj, uint8 rot);
 void obj_adv_frame (obj_t *obj);
 
 extern obj_t *obj_list_head, *obj_list_tail;

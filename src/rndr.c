@@ -10,6 +10,7 @@
 
 #include <SDL.h>
 
+#include "int.h"
 #include "miniz.h"
 #include "anim.h"
 #include "obj.h"
@@ -24,18 +25,18 @@
 
 extern SDL_Renderer *rndr;
 
-static inline void rndr_rgb_to_hsl (unsigned char *res, unsigned char r, unsigned char g, unsigned char b)
+static inline void rndr_rgb_to_hsl (uint8 *res, uint8 r, uint8 g, uint8 b)
 {
-	unsigned char h, s, l;
-	unsigned char max = (((r > g) ? r : g) > b) ? ((r > g) ? r : g) : b;
-	unsigned char min = (((r < g) ? r : g) < b) ? ((r < g) ? r : g) : b;
-	unsigned char del = max - min;
+	uint8 h, s, l;
+	uint8 max = (((r > g) ? r : g) > b) ? ((r > g) ? r : g) : b;
+	uint8 min = (((r < g) ? r : g) < b) ? ((r < g) ? r : g) : b;
+	uint8 del = max - min;
 	
 	l = (min + max) / 2;
 	s = 0;
 
 	if (l > 0 && l < 255)
-		s = (unsigned char)(((unsigned int)255 * del) / ((l > 128) ? (512 - del) : (max + min)));
+		s = (uint8)(((uint32)255 * del) / ((l > 128) ? (512 - del) : (max + min)));
 
 	if (del)
 	{
@@ -54,13 +55,13 @@ static inline void rndr_rgb_to_hsl (unsigned char *res, unsigned char r, unsigne
 	return;
 }
 
-#define HSLMUL(x,y) ((((unsigned int)(x)) * ((unsigned int)(y))) / 256)
-#define HSLDIV(x,y) ((((unsigned int)(x)) * 256) / ((unsigned int)(y)))
+#define HSLMUL(x,y) ((((uint32)(x)) * ((uint32)(y))) / 256)
+#define HSLDIV(x,y) ((((uint32)(x)) * 256) / ((uint32)(y)))
 
-static inline void rndr_hsl_to_rgb (unsigned char *res, unsigned char h, unsigned char s, unsigned char l)
+static inline void rndr_hsl_to_rgb (uint8 *res, uint8 h, uint8 s, uint8 l)
 {
-	unsigned int sr, sg, sb, tmpr, tmpg, tmpb;
-	register unsigned int hh, ss, ll;
+	uint32 sr, sg, sb, tmpr, tmpg, tmpb;
+	register uint32 hh, ss, ll;
 
 	hh = h;
 	ss = s;
@@ -111,12 +112,12 @@ static inline void rndr_hsl_to_rgb (unsigned char *res, unsigned char h, unsigne
 
 nif_t *rndr_nif_load (const char *path)
 {
-	int fd, totalread = 0, tmpread, zret, i = 0;
+	int32 fd, totalread = 0, tmpread, zret, i = 0;
 	char id [4];
-	unsigned short width, height;
+	uint16 width, height;
 	unsigned long imglen, zimglen;
-	unsigned int zimglen32, numentr;
-	unsigned char *img = NULL, *zimg = NULL;
+	uint32 zimglen32, numentr;
+	uint8 *img = NULL, *zimg = NULL;
 	nif_t *ret = NULL;
 
 	if ((fd = open (path, O_RDONLY)) < 0)
@@ -169,7 +170,7 @@ nif_t *rndr_nif_load (const char *path)
 	// load shifts into tables
 	while (read (fd, &numentr, 4) == 4 && i < 32)
 	{
-		int j;
+		int32 j;
 
 		ret->shifts [i].numentr = numentr;
 		ret->shifts [i].x = malloc (numentr * 2);
@@ -203,17 +204,17 @@ nif_t *rndr_nif_load (const char *path)
 }
 
 // shifts all pixels in specified shift group
-void rndr_nif_shift (nif_t *spr, int g, char hshift, char sshift, char lshift)
+void rndr_nif_shift (nif_t *spr, int32 g, int16 hshift, int16 sshift, int16 lshift)
 {
 	SDL_PixelFormat *f = spr->sur->format;
-	int i;
+	int32 i;
 
 	for (i = 0; i < spr->shifts [g].numentr; i++)
 	{
-		unsigned int *pix = spr->sur->pixels + (spr->shifts [g].y [i] * spr->sur->w * f->BytesPerPixel) + (spr->shifts [g].x [i] * f->BytesPerPixel);
+		uint32 *pix = (uint32*)spr->sur->pixels + (spr->shifts [g].y [i] * spr->sur->w) + spr->shifts [g].x [i];
 
-		unsigned char hsl [3];
-		unsigned char rgb [3];
+		uint8 hsl [3];
+		uint8 rgb [3];
 			
 		// convert pixel's rgb to hsl, shift, and reconvert
 		rndr_rgb_to_hsl (hsl, (*pix & f->Rmask) >> f->Rshift, (*pix & f->Gmask) >> f->Gshift, (*pix & f->Bmask) >> f->Bshift);
@@ -230,7 +231,7 @@ void rndr_nif_shift (nif_t *spr, int g, char hshift, char sshift, char lshift)
 extern SDL_Texture *fonttex;
 SDL_Texture *rndr_make_text (const char *text, SDL_Rect *inf)
 {
-	int i;
+	int32 i;
 	SDL_Texture *ret = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, strlen (text) * 8, 8);
 	SDL_SetTextureBlendMode (ret, SDL_BLENDMODE_ADD);
 	SDL_SetRenderTarget (rndr, ret);
@@ -276,9 +277,9 @@ void rndr_do_objs (void)
 void rndr_do_lighting (light_t *l)
 {
 	// assume 16x10 tiles at 16x16 pixels each
-	int i, j; 
-	unsigned char rgb [3];
-	int rsum, gsum, bsum, sub;
+	int32 i, j; 
+	uint8 rgb [3];
+	int32 rsum, gsum, bsum, sub;
 	light_t *it;
 	SDL_Rect r = { .w = 16, .h = 16 };
 
@@ -314,9 +315,9 @@ void rndr_do_lighting (light_t *l)
 	return;
 }
 
-void rndr_do_debug (unsigned short *frametimes)
+void rndr_do_debug (uint16 *frametimes)
 {
-	int i;
+	int32 i;
 	static SDL_Rect toprct = { .x = 8, .y = 8 }, botrct = { .x = 8, .y = 24 };
 	static SDL_Texture *titletxt = NULL, *vertxt = NULL;
 

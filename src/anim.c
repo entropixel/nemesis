@@ -7,10 +7,11 @@
 
 #include <SDL.h>
 
+#include "int.h"
 #include "anim.h"
 #include "obj.h"
 
-unsigned short generic_anim_rots [] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+uint16 generic_anim_rots [] = { 0, 1, 2, 3, 4, 5, 6, 7 };
 
 animframe_t char_anim_frames [] =
 {

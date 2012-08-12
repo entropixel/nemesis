@@ -8,12 +8,13 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
+#include "int.h"
 #include "anim.h"
 #include "obj.h"
 
 obj_t *obj_list_head = NULL, *obj_list_tail = NULL;
 
-obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, unsigned short frame, unsigned char rot)
+obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 frame, uint8 rot)
 {
 	obj_t *ret = malloc (sizeof (obj_t));
 
@@ -28,8 +29,8 @@ obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, unsigned sh
 	ret->anim = anim;
 	ret->show.w = ret->dest.w = ret->anim->w;
 	ret->show.h = ret->dest.h = ret->anim->h;
-	ret->dest.x = (short) x;
-	ret->dest.y = (short) y;
+	ret->dest.x = (int16) x;
+	ret->dest.y = (int16) y;
 	ret->next = NULL;
 	obj_set_frame (ret, frame);
 	obj_set_rot (ret, rot);
@@ -47,7 +48,7 @@ obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, unsigned sh
 	return ret;
 }
 
-void obj_set_frame (obj_t *obj, unsigned short frame)
+void obj_set_frame (obj_t *obj, uint16 frame)
 {
 	obj->frame = frame;
 	obj->frametics = obj->anim->frames [obj->frame].duration;
@@ -55,7 +56,7 @@ void obj_set_frame (obj_t *obj, unsigned short frame)
 	return;
 }
 
-void obj_set_rot (obj_t *obj, unsigned char rot)
+void obj_set_rot (obj_t *obj, uint8 rot)
 {
 	obj->rot = rot;
 	obj->show.x = obj->anim->rots [obj->rot] * obj->anim->w;

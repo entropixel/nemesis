@@ -11,6 +11,7 @@
 #error "Need SDL 2.0"
 #endif
 
+#include "int.h"
 #include "anim.h"
 #include "obj.h"
 #include "tile.h"
@@ -19,7 +20,7 @@
 
 tile_t levtiles [16] [10];
 
-int levtiles_offs [10] [16] = // FUCK :(
+int32 levtiles_offs [10] [16] = // FUCK :(
 {
 	{ dun_wall_inw + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2,
 	  dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2,
@@ -72,9 +73,9 @@ light_t ambience =
 };
 
 SDL_Texture *fonttex;
-char running = 1;
-unsigned int curtick = 0;
-char renderlights = 1, renderdbg = 0; // debug stuff, yay
+int8 running = 1;
+uint32 curtick = 0;
+int8 renderlights = 1, renderdbg = 0; // debug stuff, yay
 
 int main (int argc, char **argv)
 {
@@ -112,15 +113,15 @@ int main (int argc, char **argv)
 	obj_t *player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
 	player->hitbox.w = 16;
 	player->hitbox.h = 16;
-	player->hitbox.x = ((short) player->x) + 8;
-	player->hitbox.y = ((short) player->y) + 16;
+	player->hitbox.x = ((int16) player->x) + 8;
+	player->hitbox.y = ((int16) player->y) + 16;
 
 	// for now, render the level tiles to a seperate SDL_Texture, to speed things up
 	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet->sur);
 	SDL_Texture *tiletarg = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 256, 160);
 
 	{
-		int i, j;
+		int32 i, j;
 		SDL_Rect tilesrc = { .w = 16, .h = 16 };
 		SDL_Rect tiledst = { .w = 16, .h = 16 };
 
@@ -153,11 +154,11 @@ int main (int argc, char **argv)
 
 	SDL_Event ev;
 
-	unsigned short frametimes [48] = { 0 };
+	uint16 frametimes [48] = { 0 };
 
 	while (running)
 	{
-		int preticks = SDL_GetTicks (), postticks;
+		int32 preticks = SDL_GetTicks (), postticks;
 
 		input_get (&ev);
 
@@ -209,8 +210,8 @@ int main (int argc, char **argv)
 				break;
 			}
 
-			player->hitbox.x = ((short) player->x) + 8;
-			player->hitbox.y = ((short) player->y) + 16;
+			player->hitbox.x = ((int16) player->x) + 8;
+			player->hitbox.y = ((int16) player->y) + 16;
 
 			// check for collision
 			if (levtiles [(player->hitbox.x + player->hitbox.w / 2) / 16] [player->hitbox.y / 16].flags & TF_SOLID)
@@ -222,10 +223,10 @@ int main (int argc, char **argv)
 			if (levtiles [(player->hitbox.x + player->hitbox.w) / 16] [(player->hitbox.y + player->hitbox.h / 2) / 16].flags & TF_SOLID)
 				player->x = player->hitbox.x - (player->hitbox.x % 16) - 8;
 
-			player->hitbox.x = ((short) player->x) + 8;
-			player->hitbox.y = ((short) player->y) + 16;
-			player->dest.x = (short) player->x;
-			player->dest.y = (short) player->y;
+			player->hitbox.x = ((int16) player->x) + 8;
+			player->hitbox.y = ((int16) player->y) + 16;
+			player->dest.x = (int16) player->x;
+			player->dest.y = (int16) player->y;
 		}
 		else
 			obj_set_frame (player, char_anim_stand);

@@ -4,11 +4,12 @@
 
 #include <SDL.h>
 
+#include "int.h"
 #include "input.h"
 
-unsigned int keymask = 0;
+uint32 keymask = 0;
 
-extern char renderlights, renderdbg, running;
+extern int8 renderlights, renderdbg, running;
 
 void input_get (SDL_Event *ev)
 {

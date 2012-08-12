@@ -4,7 +4,7 @@ OPT = 0
 DBG = 3
 MYCFLAGS =
 MYLDFLAGS =
-CFLAGS = $(shell $(SDL2_PATH)/bin/sdl2-config --cflags) -O$(OPT) -g$(DBG) $(MYCFLAGS)
+CFLAGS = -std=c99 -pedantic $(shell $(SDL2_PATH)/bin/sdl2-config --cflags) -O$(OPT) -g$(DBG) $(MYCFLAGS)
 LDFLAGS = $(shell $(SDL2_PATH)/bin/sdl2-config --libs) $(MYLDFLAGS)
 OBJDIR = obj
 OUT = nemesis

@@ -36,18 +36,18 @@ enum
 // animation frame
 typedef struct
 {
-	unsigned short pos;
-	char duration;
-	unsigned char next;
+	uint16 pos;
+	uint8 duration;
+	uint8 next;
 } animframe_t;
 
 // animation definition
 typedef struct
 {
-	unsigned short w;
-	unsigned short h;
+	uint16 w;
+	uint16 h;
 	animframe_t *frames;
-	unsigned short *rots;
+	uint16 *rots;
 } anim_t;
 
 extern anim_t char_anim;

@@ -15,6 +15,6 @@ enum
 	LEFTK = 8
 };
 
-extern unsigned int keymask;
+extern uint32 keymask;
 
 #endif // INPUT_H__

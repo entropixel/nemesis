@@ -7,15 +7,15 @@
 
 typedef struct
 {
-	unsigned short x;
-	unsigned short y;
+	uint16 x;
+	uint16 y;
 } tileoffs_t;
 
 typedef struct
 {
 	SDL_Texture *sheet;
 	tileoffs_t offs;
-	unsigned short flags;
+	uint16 flags;
 } tile_t;
 
 extern tileoffs_t dungeon_tileoffs [];

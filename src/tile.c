@@ -4,6 +4,7 @@
 
 #include <SDL.h>
 
+#include "int.h"
 #include "tile.h"
 
 tileoffs_t dungeon_tileoffs [] =
