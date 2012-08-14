@@ -16,11 +16,9 @@
 #include "obj.h"
 #include "rndr.h"
 
-#ifdef WIN32
-#include <io.h>
-#define set_binary_mode(f) setmode (f, O_BINARY)
-#else
-#define set_binary_mode(f)
+// Let's trust that systems without O_BINARY use binary mode by default
+#ifndef O_BINARY
+#define O_BINARY 0
 #endif
 
 extern SDL_Renderer *rndr;
@@ -120,10 +118,8 @@ nif_t *rndr_nif_load (const char *path)
 	uint8 *img = NULL, *zimg = NULL;
 	nif_t *ret = NULL;
 
-	if ((fd = open (path, O_RDONLY)) < 0)
+	if ((fd = open (path, O_RDONLY | O_BINARY)) < 0)
 		goto rndr_nif_load_err;
-
-	set_binary_mode (fd);
 
 	read (fd, id, 4);
 	if (strncmp (id, "nif\0", 4))
