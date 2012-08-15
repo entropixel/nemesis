@@ -11,7 +11,7 @@ typedef struct
 	uint16 y;
 } tileoffs_t;
 
-typedef struct
+typedef struct tile_t
 {
 	SDL_Texture *sheet;
 	tileoffs_t offs;

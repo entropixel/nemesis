@@ -111,10 +111,7 @@ int main (int argc, char **argv)
 	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr->sur), &torch_anim, 0, ROT_DOWN);
 	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT);
 	obj_t *player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
-	player->hitbox.w = 16;
-	player->hitbox.h = 16;
-	player->hitbox.x = ((int16) player->x) + 8;
-	player->hitbox.y = ((int16) player->y) + 16;
+	obj_set_hitbox (player, 8, 16, 16, 16);
 
 	// for now, render the level tiles to a seperate SDL_Texture, to speed things up
 	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet->sur);
@@ -210,23 +207,8 @@ int main (int argc, char **argv)
 				break;
 			}
 
-			player->hitbox.x = ((int16) player->x) + 8;
-			player->hitbox.y = ((int16) player->y) + 16;
+			obj_collide_tiles (player, *levtiles, sizeof (*levtiles) / sizeof (**levtiles));
 
-			// check for collision
-			if (levtiles [(player->hitbox.x + player->hitbox.w / 2) / 16] [player->hitbox.y / 16].flags & TF_SOLID)
-				player->y = player->hitbox.y - (player->hitbox.y % 16);
-			if (levtiles [(player->hitbox.x + player->hitbox.w / 2) / 16] [(player->hitbox.y + player->hitbox.h) / 16].flags & TF_SOLID)
-				player->y = player->hitbox.y - (player->hitbox.y % 16) - 16;
-			if (levtiles [player->hitbox.x / 16] [(player->hitbox.y + player->hitbox.h / 2) / 16].flags & TF_SOLID)
-				player->x = player->hitbox.x - (player->hitbox.x % 16) + 8;
-			if (levtiles [(player->hitbox.x + player->hitbox.w) / 16] [(player->hitbox.y + player->hitbox.h / 2) / 16].flags & TF_SOLID)
-				player->x = player->hitbox.x - (player->hitbox.x % 16) - 8;
-
-			player->hitbox.x = ((int16) player->x) + 8;
-			player->hitbox.y = ((int16) player->y) + 16;
-			player->dest.x = (int16) player->x;
-			player->dest.y = (int16) player->y;
 		}
 		else
 			obj_set_frame (player, char_anim_stand);
@@ -242,7 +224,11 @@ int main (int argc, char **argv)
 			rndr_do_lighting (&ambience);
 
 		if (renderdbg)
+		{
 			rndr_do_debug (frametimes);
+			SDL_SetRenderDrawColor (rndr, 255, 0, 0, 255);
+			SDL_RenderFillRect (rndr, &(player->hitbox));
+		}
 
 		SDL_SetRenderTarget (rndr, NULL);
 		SDL_RenderCopy (rndr, screen, NULL, NULL);

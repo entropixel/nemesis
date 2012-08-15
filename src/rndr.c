@@ -262,6 +262,8 @@ void rndr_do_objs (void)
 
 	while (it)
 	{
+		it->dest.x = (int16)it->x;
+		it->dest.y = (int16)it->y;
 		SDL_RenderCopy (rndr, it->tex, &(it->show), &(it->dest));
 		it = it->next;
 	}

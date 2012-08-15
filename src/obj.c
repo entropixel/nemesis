@@ -11,6 +11,7 @@
 #include "int.h"
 #include "anim.h"
 #include "obj.h"
+#include "tile.h"
 
 obj_t *obj_list_head = NULL, *obj_list_tail = NULL;
 
@@ -48,6 +49,19 @@ obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 fram
 	return ret;
 }
 
+void obj_set_hitbox (obj_t *obj, uint8 x, uint8 y, uint16 w, uint16 h)
+{
+	obj->hitbox.x = ((int16)obj->x) + x;
+	obj->hitbox.y = ((int16)obj->y) + y;
+	obj->hitbox.w = w;
+	obj->hitbox.h = h;
+
+	obj->hitb_x = x;
+	obj->hitb_y = y;
+
+	return;
+}
+
 void obj_set_frame (obj_t *obj, uint16 frame)
 {
 	obj->frame = frame;
@@ -70,6 +84,26 @@ void obj_adv_frame (obj_t *obj)
 
 	if (!obj->frametics)
 		obj_set_frame (obj, obj->anim->frames [obj->frame].next);
+
+	return;
+}
+
+void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
+{
+	obj->hitbox.x = ((int16) obj->x) + obj->hitb_x;
+	obj->hitbox.y = ((int16) obj->y) + obj->hitb_y;
+
+	if (tiles [((obj->hitbox.x + obj->hitbox.w / 2) / 16) * width + obj->hitbox.y / 16].flags & TF_SOLID)
+		obj->y -= (obj->hitbox.y % 16) - 16;
+	if (tiles [((obj->hitbox.x + obj->hitbox.w / 2) / 16) * width + (obj->hitbox.y + obj->hitbox.h) / 16].flags & TF_SOLID)
+		obj->y -= (obj->hitbox.y % 16) + obj->hitbox.h - 16;
+	if (tiles [(obj->hitbox.x / 16) * width + (obj->hitbox.y + obj->hitbox.h / 2) / 16].flags & TF_SOLID)
+		obj->x -= (obj->hitbox.x % 16) - 16;
+	if (tiles [((obj->hitbox.x + obj->hitbox.w) / 16) * width + (obj->hitbox.y + obj->hitbox.h / 2) / 16].flags & TF_SOLID)
+		obj->x -= (obj->hitbox.x % 16) + obj->hitbox.w - 16;
+
+	obj->hitbox.x = ((int16) obj->x) + obj->hitb_x;
+	obj->hitbox.y = ((int16) obj->y) + obj->hitb_y;
 
 	return;
 }
