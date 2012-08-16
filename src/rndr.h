@@ -13,6 +13,7 @@ typedef struct light_s
 	uint8 sat;
 	uint8 bright;
 	uint8 falloff;
+	uint8 flicker;
 	struct light_s *next;
 } light_t;
 

@@ -272,6 +272,22 @@ void rndr_do_objs (void)
 }
 
 #define min(a,b) ((a < b) ? a : b)
+static uint8 flicker [64] =
+{
+	232, 242, 103, 121, 103, 25, 127, 185,
+	103, 199, 232, 167, 220, 112, 121, 153,
+	220, 175, 8, 151, 131, 124, 205, 248,
+	124, 127, 209, 99, 107, 228, 248, 83,
+	214, 96, 205, 62, 121, 76, 247, 224,
+	19, 223, 136, 240, 80, 1, 137, 44,
+	177, 145, 195, 52, 14, 144, 45, 138,
+	15, 254, 237, 122, 226, 230, 206, 185,
+};
+
+static uint8 flickindx = 0;
+
+extern uint32 curtick;
+
 void rndr_do_lighting (light_t *l)
 {
 	// assume 16x10 tiles at 16x16 pixels each
@@ -280,6 +296,9 @@ void rndr_do_lighting (light_t *l)
 	int32 rsum, gsum, bsum, sub;
 	light_t *it;
 	SDL_Rect r = { .w = 16, .h = 16 };
+
+	if (!(curtick % 15))
+		flickindx ++;
 
 	for (i = 0; i < 16; i++)
 		for (j = 0; j < 10; j++)
@@ -292,8 +311,10 @@ void rndr_do_lighting (light_t *l)
 
 			while (it)
 			{
-				// sub = it->falloff * (abs (i - it->x) + abs (j - it->y));
 				sub = it->falloff * sqrt ((i - it->x) * (i - it->x) + (j - it->y) * (j - it->y));
+
+				if (it->flicker)
+					sub -= flicker [flickindx] % it->flicker;
 
 				if (sub < 255)
 				{
