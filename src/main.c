@@ -54,14 +54,14 @@ SDL_Renderer *rndr = NULL;
 light_t torch2 =
 {
 	1, 6,
-	28, 100, 180, 24,
+	28, 100, 142, 24,
 	NULL
 };
 
 light_t torch1 =
 {
 	8, 1,
-	28, 100, 180, 24,
+	28, 100, 142, 24,
 	&torch2
 };
 

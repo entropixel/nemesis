@@ -292,8 +292,8 @@ void rndr_do_lighting (light_t *l)
 
 			while (it)
 			{
-				sub = it->falloff * (abs (i - it->x) + abs (j - it->y));
-				//sub = it->falloff * sqrt ((i - it->x) * (i - it->x) + (j - it->y) * (j - it->y));
+				// sub = it->falloff * (abs (i - it->x) + abs (j - it->y));
+				sub = it->falloff * sqrt ((i - it->x) * (i - it->x) + (j - it->y) * (j - it->y));
 
 				if (sub < 255)
 				{
