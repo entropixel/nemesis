@@ -15,7 +15,7 @@
 
 obj_t *obj_list_head = NULL, *obj_list_tail = NULL;
 
-obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 frame, uint8 rot)
+obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 frame, uint8 rot, objthink_f thinker)
 {
 	obj_t *ret = malloc (sizeof (obj_t));
 
@@ -32,6 +32,7 @@ obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 fram
 	ret->show.h = ret->dest.h = ret->anim->h;
 	ret->dest.x = (int16) x;
 	ret->dest.y = (int16) y;
+	ret->thinker = thinker;
 	ret->next = NULL;
 	obj_set_frame (ret, frame);
 	obj_set_rot (ret, rot);
@@ -88,6 +89,19 @@ void obj_adv_frame (obj_t *obj)
 	return;
 }
 
+void obj_do_advframes (void) // wrap the above
+{
+	obj_t *it = obj_list_head;
+
+	while (it)
+	{
+		obj_adv_frame (it);
+		it = it->next;
+	}
+
+	return;
+}
+
 void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
 {
 	obj->hitbox.x = ((int16) obj->x) + obj->hitb_x;
@@ -104,6 +118,21 @@ void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
 
 	obj->hitbox.x = ((int16) obj->x) + obj->hitb_x;
 	obj->hitbox.y = ((int16) obj->y) + obj->hitb_y;
+
+	return;
+}
+
+void obj_do_thinkers (void)
+{
+	obj_t *it = obj_list_head;
+
+	while (it)
+	{
+		if (it->thinker)
+			it->thinker (it);
+
+		it = it->next;
+	}
 
 	return;
 }

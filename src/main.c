@@ -14,6 +14,7 @@
 #include "int.h"
 #include "anim.h"
 #include "obj.h"
+#include "player.h"
 #include "tile.h"
 #include "rndr.h"
 #include "input.h"
@@ -108,9 +109,9 @@ int main (int argc, char **argv)
 	rndr_nif_shift (plsprite, 3, 77, 0, -30);
 	nif_t *torchspr = rndr_nif_load ("img/objects/dungeon/adungeon/torches.nif");
 	nif_t *tilesheet = rndr_nif_load ("img/tiles/dungeon/adungeon.nif");
-	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr->sur), &torch_anim, 0, ROT_DOWN);
-	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT);
-	obj_t *player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_stand, ROT_DOWNRIGHT);
+	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr->sur), &torch_anim, 0, ROT_DOWN, NULL);
+	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT, NULL);
+	obj_t *player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_stand, ROT_DOWNRIGHT, player_thinker);
 	obj_set_hitbox (player, 8, 16, 16, 16);
 
 	// for now, render the level tiles to a seperate SDL_Texture, to speed things up
@@ -157,66 +158,16 @@ int main (int argc, char **argv)
 	{
 		int32 preticks = SDL_GetTicks (), postticks;
 
+		// Get input, run object logic code
 		input_get (&ev);
+		obj_do_thinkers ();
 
-		if (keymask)
-		{
-			if (player->frame == char_anim_stand)
-				obj_set_frame (player, char_anim_walk1);
-
-			switch (keymask)
-			{
-				case UPK:
-					obj_set_rot (player, ROT_UP);
-					player->y -= 1.41f;
-				break;
-				case UPK | RIGHTK:
-					obj_set_rot (player, ROT_UPRIGHT);
-					player->x += 1.0f;
-					player->y -= 1.0f;
-				break;
-				case RIGHTK:
-					obj_set_rot (player, ROT_RIGHT);
-					player->x += 1.41f;
-				break;
-				case RIGHTK | DOWNK:
-					obj_set_rot (player, ROT_DOWNRIGHT);
-					player->x += 1.0f;
-					player->y += 1.0f;
-				break;
-				case DOWNK:
-					obj_set_rot (player, ROT_DOWN);
-					player->y += 1.41f;
-				break;
-				case DOWNK | LEFTK:
-					obj_set_rot (player, ROT_DOWNLEFT);
-					player->x -= 1.0f;
-					player->y += 1.0f;
-				break;
-				case LEFTK:
-					obj_set_rot (player, ROT_LEFT);
-					player->x -= 1.41f;
-				break;
-				case LEFTK | UPK:
-					obj_set_rot (player, ROT_UPLEFT);
-					player->x -= 1.0f;
-					player->y -= 1.0f;
-				break;
-				default:
-					obj_set_frame (player, char_anim_stand);
-				break;
-			}
-
-			obj_collide_tiles (player, *levtiles, sizeof (*levtiles) / sizeof (**levtiles));
-
-		}
-		else
-			obj_set_frame (player, char_anim_stand);
-
+		// Clear the screen, set draw target to the non-scaled 256x160 texture
 		SDL_SetRenderDrawColor (rndr, 0, 0, 0, 255);
 		SDL_RenderClear (rndr);
 		SDL_SetRenderTarget (rndr, screen);
 
+		// Render
 		rndr_do_tiles (tiletarg);
 		rndr_do_objs ();
 
@@ -230,15 +181,16 @@ int main (int argc, char **argv)
 			SDL_RenderFillRect (rndr, &(player->hitbox));
 		}
 
+		// Set drawing target to the scaled texture, and copy to it
 		SDL_SetRenderTarget (rndr, NULL);
 		SDL_RenderCopy (rndr, screen, NULL, NULL);
 
 		SDL_RenderPresent (rndr);
 
-		obj_adv_frame (player);
-		obj_adv_frame (torch);
-		obj_adv_frame (torchb);
+		// Advance animation frames
+		obj_do_advframes ();
 
+		// Calculate total frame time, sleep until next frame
 		postticks = SDL_GetTicks ();
 		frametimes [curtick % 48] = postticks - preticks; 
 
