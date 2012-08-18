@@ -355,7 +355,7 @@ void rndr_do_debug (uint16 *frametimes)
 	if (!titletxt && !vertxt)
 	{
 		titletxt = rndr_make_text ("Nemesis PreAlpha", &toprct);
-		vertxt = rndr_make_text (__DATE__, &botrct);
+		vertxt = rndr_make_text (GIT_VERSION, &botrct);
 	}
 
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
