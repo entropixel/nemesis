@@ -22,6 +22,7 @@
 #endif
 
 extern SDL_Renderer *rndr;
+extern SDL_Texture *screen;
 
 static inline void rndr_rgb_to_hsl (uint8 *res, uint8 r, uint8 g, uint8 b)
 {
@@ -225,20 +226,30 @@ void rndr_nif_shift (nif_t *spr, int32 g, int16 hshift, int16 sshift, int16 lshi
 }
 
 extern SDL_Texture *fonttex;
-SDL_Texture *rndr_make_text (const char *text, SDL_Rect *inf)
+
+void rndr_print_text (const char *text, int16 x, int16 y)
 {
 	int32 i;
+
+	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_ADD);
+	for (i = 0; i < strlen (text); i++)
+	{
+		SDL_Rect src = { (text [i] & 0x0f) * 8, ((text [i] & 0xf0) >> 4) * 8, 8, 8 };
+		SDL_Rect dst = { x + i * 8, y, 8, 8 };
+
+		SDL_RenderCopy (rndr, fonttex, &src, &dst);
+	}
+
+	return;
+}
+
+SDL_Texture *rndr_make_text (const char *text, SDL_Rect *inf)
+{
 	SDL_Texture *ret = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, strlen (text) * 8, 8);
 	SDL_SetTextureBlendMode (ret, SDL_BLENDMODE_ADD);
 	SDL_SetRenderTarget (rndr, ret);
 
-	for (i = 0; i < strlen (text); i++)
-	{
-		SDL_Rect src = { (text [i] & 0x0f) * 8, ((text [i] & 0xf0) >> 4) * 8, 8, 8 };
-		SDL_Rect dst = { i * 8, 0, 8, 8 };
-
-		SDL_RenderCopy (rndr, fonttex, &src, &dst);
-	}
+	rndr_print_text (text, 0, 0);
 
 	if (inf) // give them some info about the text if we want it
 	{
@@ -339,6 +350,7 @@ void rndr_do_debug (uint16 *frametimes)
 	int32 i;
 	static SDL_Rect toprct = { .x = 8, .y = 8 }, botrct = { .x = 8, .y = 24 };
 	static SDL_Texture *titletxt = NULL, *vertxt = NULL;
+	char mstext [8] = "What.";
 
 	if (!titletxt && !vertxt)
 	{
@@ -360,6 +372,9 @@ void rndr_do_debug (uint16 *frametimes)
 			SDL_RenderCopy (rndr, vertxt, NULL, &botrct);
 		}
 	}
+
+	sprintf (mstext, "%ims", frametimes [(curtick % 48) - (curtick % 6)]);
+	rndr_print_text (mstext, 100, 150);
 
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 	return;
