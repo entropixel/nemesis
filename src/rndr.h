@@ -31,9 +31,10 @@ typedef struct
 nif_t *rndr_nif_load (const char *path);
 void rndr_nif_shift (nif_t *spr, int32 g, int16 hshift, int16 sshift, int16 lshift);
 SDL_Texture *rndr_make_text (const char *text, SDL_Rect *inf);
-void rndr_do_tiles (SDL_Texture *tiles);
-void rndr_do_objs (void);
-void rndr_do_lighting (light_t *l);
-void rndr_do_debug (uint16 *frametimes);
+void rndr_do_camera (SDL_Rect *camera, obj_t *follow, int16 w, int16 h);
+void rndr_do_tiles (SDL_Texture *tiles, SDL_Rect *camera);
+void rndr_do_objs (SDL_Rect *camera);
+void rndr_do_lighting (light_t *l, SDL_Rect *camera, int16 h, int16 w);
+void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera);
 
 #endif // RNDR_H__

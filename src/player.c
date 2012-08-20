@@ -11,7 +11,7 @@
 #include "player.h"
 #include "input.h"
 
-extern tile_t levtiles [16] [10];
+extern tile_t levtiles [16] [17];
 
 void player_thinker (obj_t *obj)
 {

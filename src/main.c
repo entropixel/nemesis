@@ -19,9 +19,9 @@
 #include "rndr.h"
 #include "input.h"
 
-tile_t levtiles [16] [10];
+tile_t levtiles [16] [17];
 
-int32 levtiles_offs [10] [16] = // FUCK :(
+int32 levtiles_offs [17] [16] = // FUCK :(
 {
 	{ dun_wall_inw + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2,
 	  dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2,
@@ -31,6 +31,20 @@ int32 levtiles_offs [10] [16] = // FUCK :(
 	  dun_wall_ine + 1, dun_wall_e + 2 },
 	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_inw, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n,
 	  dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_ine, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
+	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
+	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
 	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
 	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
 	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
@@ -100,6 +114,7 @@ int main (int argc, char **argv)
 	}
 
 	SDL_Texture *screen = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 256, 160);
+	SDL_Rect camera = { .w = 260, .h = 160 };
 
 	// testing crap now :D
 	nif_t *plsprite = rndr_nif_load ("img/objects/player/male/male.nif");
@@ -116,7 +131,7 @@ int main (int argc, char **argv)
 
 	// for now, render the level tiles to a seperate SDL_Texture, to speed things up
 	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet->sur);
-	SDL_Texture *tiletarg = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 256, 160);
+	SDL_Texture *tiletarg = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 16 * 16, 17 * 16);
 
 	{
 		int32 i, j;
@@ -125,7 +140,7 @@ int main (int argc, char **argv)
 
 		SDL_SetRenderTarget (rndr, tiletarg);
 		for (i = 0; i < 16; i++)
-			for (j = 0; j < 10; j++)
+			for (j = 0; j < 17; j++)
 			{
 				levtiles [i] [j].sheet = tiletex;
 				levtiles [i] [j].offs = dungeon_tileoffs [levtiles_offs [j] [i]];
@@ -168,18 +183,15 @@ int main (int argc, char **argv)
 		SDL_SetRenderTarget (rndr, screen);
 
 		// Render
-		rndr_do_tiles (tiletarg);
-		rndr_do_objs ();
+		rndr_do_camera (&camera, player, 16 * 16, 17 * 16);
+		rndr_do_tiles (tiletarg, &camera);
+		rndr_do_objs (&camera);
 
 		if (renderlights)
-			rndr_do_lighting (&ambience);
+			rndr_do_lighting (&ambience, &camera, 16, 17);
 
 		if (renderdbg)
-		{
-			rndr_do_debug (frametimes);
-			SDL_SetRenderDrawColor (rndr, 255, 0, 0, 255);
-			SDL_RenderFillRect (rndr, &(player->hitbox));
-		}
+			rndr_do_debug (frametimes, &camera);
 
 		// Set drawing target to the scaled texture, and copy to it
 		SDL_SetRenderTarget (rndr, NULL);

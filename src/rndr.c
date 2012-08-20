@@ -261,21 +261,41 @@ SDL_Texture *rndr_make_text (const char *text, SDL_Rect *inf)
 	return ret;
 }
 
-void rndr_do_tiles (SDL_Texture *tiles) // todo, heh
+void rndr_do_camera (SDL_Rect *camera, obj_t *follow, int16 w, int16 h)
 {
-	SDL_RenderCopy (rndr, tiles, NULL, NULL);
+	camera->x = ((int16)follow->x) + (follow->dest.w >> 1) - 128;
+	camera->y = ((int16)follow->y) + (follow->dest.h >> 1) - 80;
+
+	// clamp values
+	camera->x = (camera->x < 0) ? 0 : camera->x;
+	camera->y = (camera->y < 0) ? 0 : camera->y;
+	camera->x = (camera->x > w - 256) ? w - 256 : camera->x;
+	camera->y = (camera->y > h - 160) ? h - 160 : camera->y;
+
 	return;
 }
 
-void rndr_do_objs (void)
+void rndr_do_tiles (SDL_Texture *tiles, SDL_Rect *camera)
+{
+	SDL_RenderCopy (rndr, tiles, camera, NULL);
+	return;
+}
+
+void rndr_do_objs (SDL_Rect *camera)
 {
 	obj_t *it = obj_list_head;
 
 	while (it)
 	{
-		it->dest.x = (int16)it->x;
-		it->dest.y = (int16)it->y;
-		SDL_RenderCopy (rndr, it->tex, &(it->show), &(it->dest));
+		it->dest.x = (int16)it->x - camera->x;
+		it->dest.y = (int16)it->y - camera->y;
+
+		if (it->dest.x > -(it->dest.w)
+		 || it->dest.x < camera->w
+		 || it->dest.y > -(it->dest.h)
+		 || it->dest.y < camera->h)
+			SDL_RenderCopy (rndr, it->tex, &(it->show), &(it->dest));
+
 		it = it->next;
 	}
 
@@ -299,7 +319,7 @@ static uint8 flickindx = 0;
 
 extern uint32 curtick;
 
-void rndr_do_lighting (light_t *l)
+void rndr_do_lighting (light_t *l, SDL_Rect *camera, int16 w, int16 h)
 {
 	// assume 16x10 tiles at 16x16 pixels each
 	int32 i, j; 
@@ -311,14 +331,20 @@ void rndr_do_lighting (light_t *l)
 	if (!(curtick % 15))
 		flickindx ++;
 
-	for (i = 0; i < 16; i++)
-		for (j = 0; j < 10; j++)
+	for (i = 0; i < w; i++)
+		for (j = 0; j < h; j++)
 		{
 			rsum = gsum = bsum = 0;
 			it = l;
 
-			r.x = i * 16;
-			r.y = j * 16;
+			r.x = i * 16 - camera->x;
+			r.y = j * 16 - camera->y;
+
+			if (r.x < -16
+			 || r.x > camera->w
+			 || r.y < -16
+			 || r.y > camera->h)
+				continue;
 
 			while (it)
 			{
@@ -345,12 +371,13 @@ void rndr_do_lighting (light_t *l)
 	return;
 }
 
-void rndr_do_debug (uint16 *frametimes)
+void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera)
 {
 	int32 i;
 	static SDL_Rect toprct = { .x = 8, .y = 8 }, botrct = { .x = 8, .y = 24 };
 	static SDL_Texture *titletxt = NULL, *vertxt = NULL;
 	char mstext [8] = "What.";
+	obj_t *it = obj_list_head;;
 
 	if (!titletxt && !vertxt)
 	{
@@ -377,5 +404,16 @@ void rndr_do_debug (uint16 *frametimes)
 	rndr_print_text (mstext, 100, 150);
 
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
+
+	SDL_SetRenderDrawColor (rndr, 255, 0, 0, 255);
+	while (it)
+	{
+		SDL_Rect tmphb = it->hitbox;
+		tmphb.x -= camera->x;
+		tmphb.y -= camera->y;
+		SDL_RenderFillRect (rndr, &tmphb);
+		it = it->next;
+	}
+
 	return;
 }
