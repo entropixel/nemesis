@@ -87,6 +87,7 @@ light_t ambience =
 	&torch1
 };
 
+static uint16 ticktime = 1000 / 60;
 SDL_Texture *fonttex;
 int8 running = 1;
 uint32 curtick = 0;
@@ -168,14 +169,26 @@ int main (int argc, char **argv)
 	SDL_Event ev;
 
 	uint16 frametimes [48] = { 0 };
+	int32 nexttick = SDL_GetTicks ();
 
 	while (running)
 	{
-		int32 preticks = SDL_GetTicks (), postticks;
+		static int32 sleeptime, loops;
+
+		// Set tick
+		curtick ++;
+		nexttick += ticktime;
 
 		// Get input, run object logic code
 		input_get (&ev);
+
+		obj_do_advframes ();
 		obj_do_thinkers ();
+
+		if (SDL_GetTicks () > nexttick && loops++ < 10)
+			continue;
+
+		loops = 0;
 
 		// Clear the screen, set draw target to the non-scaled 256x160 texture
 		SDL_SetRenderDrawColor (rndr, 0, 0, 0, 255);
@@ -199,17 +212,12 @@ int main (int argc, char **argv)
 
 		SDL_RenderPresent (rndr);
 
-		// Advance animation frames
-		obj_do_advframes ();
-
 		// Calculate total frame time, sleep until next frame
-		postticks = SDL_GetTicks ();
-		frametimes [curtick % 48] = postticks - preticks; 
+		sleeptime = nexttick - SDL_GetTicks ();
+		if (sleeptime > 0)
+			SDL_Delay (sleeptime);
 
-		if (postticks - preticks < (1000/60))
-			SDL_Delay ((1000/60) - (postticks - preticks));
-
-		curtick ++;
+		frametimes [curtick % 48] = ticktime - sleeptime; 
 	}
 
 	SDL_DestroyRenderer (rndr);
