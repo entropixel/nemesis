@@ -127,7 +127,7 @@ int main (int argc, char **argv)
 	nif_t *tilesheet = rndr_nif_load ("img/tiles/dungeon/adungeon.nif");
 	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr->sur), &torch_anim, 0, ROT_DOWN, NULL);
 	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT, NULL);
-	obj_t *player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_stand, ROT_DOWNRIGHT, player_thinker);
+	obj_t *player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker);
 	obj_set_hitbox (player, 8, 16, 16, 16);
 
 	// for now, render the level tiles to a seperate SDL_Texture, to speed things up

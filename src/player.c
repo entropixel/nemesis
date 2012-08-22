@@ -17,7 +17,7 @@ void player_thinker (obj_t *obj)
 {
 	if (keymask)
 	{
-		if (obj->frame == char_anim_stand)
+		if (obj->frame >= char_anim_idle1 && obj->frame <= char_anim_idle3)
 			obj_set_frame (obj, char_anim_walk1);
 
 		switch (keymask)
@@ -59,15 +59,15 @@ void player_thinker (obj_t *obj)
 				obj->y -= 1.0f;
 			break;
 			default:
-				obj_set_frame (obj, char_anim_stand);
+				obj_set_frame (obj, char_anim_idle1);
 			break;
 		}
 
 		obj_collide_tiles (obj, *levtiles, sizeof (*levtiles) / sizeof (**levtiles));
 
 	}
-	else
-		obj_set_frame (obj, char_anim_stand);
+	else if (obj->frame < char_anim_idle1 || obj->frame > char_anim_idle3)
+		obj_set_frame (obj, char_anim_idle1);
 
 	return;
 }
