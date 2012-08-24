@@ -9,8 +9,8 @@ enum
 {
 	char_anim_idle1,
 	char_anim_idle2,
-	char_anim_idle3,
-	char_anim_un3,
+	char_anim_tired1,
+	char_anim_tired2,
 	char_anim_walk1,
 	char_anim_walk2,
 	char_anim_walk3,

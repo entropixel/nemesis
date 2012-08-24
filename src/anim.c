@@ -15,10 +15,10 @@ uint16 generic_anim_rots [] = { 0, 1, 2, 3, 4, 5, 6, 7 };
 
 animframe_t char_anim_frames [] =
 {
-	{ 0, 20, char_anim_idle2 }, // standing
-	{ 1, 20, char_anim_idle3 },
-	{ 2, 20, char_anim_idle1 },
-	{ -1, -1, -1 },
+	{ 0, 180, char_anim_idle2 }, // standing
+	{ 1, 30, char_anim_idle1 },
+	{ 0, 60, char_anim_tired2 },
+	{ 2, 60, char_anim_tired1 },
 	// Walking animations
 	{ 0, 4, char_anim_walk2 },
 	{ 4, 4, char_anim_walk3 },
