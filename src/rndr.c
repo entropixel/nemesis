@@ -231,7 +231,6 @@ void rndr_print_text (const char *text, int16 x, int16 y)
 {
 	int32 i;
 
-	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_ADD);
 	for (i = 0; i < strlen (text); i++)
 	{
 		SDL_Rect src = { (text [i] & 0x0f) * 8, ((text [i] & 0xf0) >> 4) * 8, 8, 8 };
@@ -246,7 +245,7 @@ void rndr_print_text (const char *text, int16 x, int16 y)
 SDL_Texture *rndr_make_text (const char *text, SDL_Rect *inf)
 {
 	SDL_Texture *ret = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, strlen (text) * 8, 8);
-	SDL_SetTextureBlendMode (ret, SDL_BLENDMODE_ADD);
+	SDL_SetTextureBlendMode (ret, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderTarget (rndr, ret);
 
 	rndr_print_text (text, 0, 0);
@@ -371,12 +370,12 @@ void rndr_do_lighting (light_t *l, SDL_Rect *camera, int16 w, int16 h)
 	return;
 }
 
-void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera)
+void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player)
 {
 	int32 i;
 	static SDL_Rect toprct = { .x = 8, .y = 8 }, botrct = { .x = 8, .y = 24 };
 	static SDL_Texture *titletxt = NULL, *vertxt = NULL;
-	char mstext [8] = "What.";
+	char mstext [16] = "What.", xtext [16] = "x: ", ytext [16] = "y: ";
 	obj_t *it = obj_list_head;;
 
 	if (!titletxt && !vertxt)
@@ -385,7 +384,7 @@ void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera)
 		vertxt = rndr_make_text (GIT_VERSION, &botrct);
 	}
 
-	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
+	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_ADD);
 	for (i = 0; i < 48; i++)
 	{
 		SDL_Rect rtime = { .x = i * 2, .w = 2, .h = frametimes [i] * 2 };
@@ -393,14 +392,15 @@ void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera)
 
 		SDL_SetRenderDrawColor (rndr, (frametimes [i] > 8) ? 255 : 0, (frametimes [i] < 17) ? 255 : 0, 0, 128);
 		SDL_RenderFillRect (rndr, &rtime);
-		if (!i)
-		{
-			SDL_RenderCopy (rndr, titletxt, NULL, &toprct);
-			SDL_RenderCopy (rndr, vertxt, NULL, &botrct);
-		}
 	}
 
+	SDL_RenderCopy (rndr, titletxt, NULL, &toprct);
+	SDL_RenderCopy (rndr, vertxt, NULL, &botrct);
+	sprintf (xtext, "x: %i", player->hitbox.x);
+	sprintf (ytext, "y: %i", player->hitbox.y);
 	sprintf (mstext, "%ims", frametimes [(curtick % 48) - (curtick % 6)]);
+	rndr_print_text (xtext, 8, 40);
+	rndr_print_text (ytext, 8, 56);
 	rndr_print_text (mstext, 100, 150);
 
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
@@ -414,6 +414,21 @@ void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera)
 		SDL_RenderFillRect (rndr, &tmphb);
 		it = it->next;
 	}
+
+	return;
+}
+
+void rndr_do_edithud (void)
+{
+	static SDL_Rect txtrct = { .x = 215, .y = 8 };
+	static SDL_Texture *edittxt = NULL;
+
+	if (!edittxt)
+		edittxt = rndr_make_text ("edit", &txtrct);
+
+	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
+	SDL_RenderCopy (rndr, edittxt, NULL, &txtrct);
+	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 
 	return;
 }

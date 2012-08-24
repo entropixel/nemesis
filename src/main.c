@@ -91,7 +91,34 @@ static uint16 ticktime = 1000 / 60;
 SDL_Texture *fonttex;
 int8 running = 1;
 uint32 curtick = 0;
-int8 renderlights = 1, renderdbg = 0; // debug stuff, yay
+int8 renderlights = 1, renderdbg = 0, editmode = 0; // debug stuff, yay
+
+void update_tiles (SDL_Texture *tiletarg, SDL_Texture *tiletex)
+{
+	int32 i, j;
+	SDL_Rect tilesrc = { .w = 16, .h = 16 };
+	SDL_Rect tiledst = { .w = 16, .h = 16 };
+
+	SDL_SetRenderTarget (rndr, tiletarg);
+	for (i = 0; i < 16; i++)
+		for (j = 0; j < 17; j++)
+		{
+			levtiles [i] [j].sheet = tiletex;
+			levtiles [i] [j].offs = dungeon_tileoffs [levtiles_offs [j] [i]];
+
+			// set to solid if this isn't a floor
+			if (levtiles_offs [j] [i])
+				levtiles [i] [j].flags |= TF_SOLID;
+
+			tilesrc.x = levtiles [i] [j].offs.x * 16;
+			tilesrc.y = levtiles [i] [j].offs.y * 16;
+			tiledst.x = i * 16;
+			tiledst.y = j * 16;
+			SDL_RenderCopy (rndr, levtiles [i] [j].sheet, &tilesrc, &tiledst);
+		}
+
+	SDL_SetRenderTarget (rndr, NULL);
+}
 
 int main (int argc, char **argv)
 {
@@ -134,31 +161,7 @@ int main (int argc, char **argv)
 	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet->sur);
 	SDL_Texture *tiletarg = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 16 * 16, 17 * 16);
 
-	{
-		int32 i, j;
-		SDL_Rect tilesrc = { .w = 16, .h = 16 };
-		SDL_Rect tiledst = { .w = 16, .h = 16 };
-
-		SDL_SetRenderTarget (rndr, tiletarg);
-		for (i = 0; i < 16; i++)
-			for (j = 0; j < 17; j++)
-			{
-				levtiles [i] [j].sheet = tiletex;
-				levtiles [i] [j].offs = dungeon_tileoffs [levtiles_offs [j] [i]];
-
-				// set to solid if this isn't a floor
-				if (levtiles_offs [j] [i])
-					levtiles [i] [j].flags |= TF_SOLID;
-
-				tilesrc.x = levtiles [i] [j].offs.x * 16;
-				tilesrc.y = levtiles [i] [j].offs.y * 16;
-				tiledst.x = i * 16;
-				tiledst.y = j * 16;
-				SDL_RenderCopy (rndr, levtiles [i] [j].sheet, &tilesrc, &tiledst);
-			}
-
-		SDL_SetRenderTarget (rndr, NULL);
-	}
+	update_tiles (tiletarg, tiletex);
 
 	// font
 	nif_t *fontspr = rndr_nif_load ("img/gui/font.nif");
@@ -204,7 +207,10 @@ int main (int argc, char **argv)
 			rndr_do_lighting (&ambience, &camera, 16, 17);
 
 		if (renderdbg)
-			rndr_do_debug (frametimes, &camera);
+			rndr_do_debug (frametimes, &camera, player);
+
+		if (editmode)
+			rndr_do_edithud ();
 
 		// Set drawing target to the scaled texture, and copy to it
 		SDL_SetRenderTarget (rndr, NULL);

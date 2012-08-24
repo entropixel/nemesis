@@ -9,7 +9,7 @@
 
 uint32 keymask = 0;
 
-extern int8 renderlights, renderdbg, running;
+extern int8 renderlights, renderdbg, running, editmode;
 
 void input_get (SDL_Event *ev)
 {
@@ -31,6 +31,9 @@ void input_get (SDL_Event *ev)
 						break;
 					case SDLK_LEFT:
 						keymask &= ~(LEFTK);
+						break;
+					case SDLK_F1:
+						editmode = !editmode;
 						break;
 					case SDLK_F2:
 						renderlights = !renderlights;
