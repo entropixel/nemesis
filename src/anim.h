@@ -37,7 +37,7 @@ enum
 typedef struct
 {
 	uint16 pos;
-	uint8 duration;
+	uint16 duration;
 	uint8 next;
 } animframe_t;
 

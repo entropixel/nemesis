@@ -16,7 +16,7 @@ typedef struct obj_s
 	anim_t *anim;
 	uint8 frame; // Point to index in anim->frames
 	uint8 rot; // Point to index in anim->rots
-	uint8 frametics; // How many more tics to stay on current frame
+	uint16 frametics; // How many more tics to stay on current frame
 
 	float x;
 	float y;
