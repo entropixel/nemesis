@@ -418,16 +418,27 @@ void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player)
 	return;
 }
 
-void rndr_do_edithud (void)
+void rndr_do_edithud (SDL_Rect *camera, uint8 selx, uint8 sely)
 {
 	static SDL_Rect txtrct = { .x = 215, .y = 8 };
 	static SDL_Texture *edittxt = NULL;
+	SDL_Point selbox [5] =
+	{
+		{ selx * 16 - camera->x, sely * 16 - camera->y },
+		{ selx * 16 - camera->x, sely * 16 - camera->y + 16 },
+		{ selx * 16 - camera->x + 16, sely * 16 - camera->y + 16 },
+		{ selx * 16 - camera->x + 16, sely * 16 - camera->y },
+		{ selx * 16 - camera->x, sely * 16 - camera->y }
+	};
 
 	if (!edittxt)
 		edittxt = rndr_make_text ("edit", &txtrct);
 
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
+	SDL_SetRenderDrawColor (rndr, 255, 255, 255, 255);
 	SDL_RenderCopy (rndr, edittxt, NULL, &txtrct);
+	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_BLEND);
+	SDL_RenderDrawLines (rndr, selbox, 5);
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
 
 	return;

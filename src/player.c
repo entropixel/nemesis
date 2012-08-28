@@ -7,11 +7,12 @@
 #include "int.h"
 #include "anim.h"
 #include "obj.h"
+#include "level.h"
 #include "tile.h"
 #include "player.h"
 #include "input.h"
 
-extern tile_t levtiles [16] [17];
+extern level_t *level;
 
 void player_thinker (obj_t *obj)
 {
@@ -63,7 +64,7 @@ void player_thinker (obj_t *obj)
 			break;
 		}
 
-		obj_collide_tiles (obj, *levtiles, sizeof (*levtiles) / sizeof (**levtiles));
+		obj_collide_tiles (obj, level->tiles, level->w);
 
 	}
 	else if (obj->frame != char_anim_idle1 && obj->frame != char_anim_idle2)

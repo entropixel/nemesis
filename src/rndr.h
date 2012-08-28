@@ -36,6 +36,6 @@ void rndr_do_tiles (SDL_Texture *tiles, SDL_Rect *camera);
 void rndr_do_objs (SDL_Rect *camera);
 void rndr_do_lighting (light_t *l, SDL_Rect *camera, int16 h, int16 w);
 void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player);
-void rndr_do_edithud (void);
+void rndr_do_edithud (SDL_Rect *camera, uint8 selx, uint8 sely);
 
 #endif // RNDR_H__

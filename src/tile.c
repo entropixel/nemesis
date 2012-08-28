@@ -34,4 +34,7 @@ tileoffs_t dungeon_tileoffs [] =
 	{ 9, 0 }, // inner southwest corner
 	{ 9, 1 },
 	{ 9, 2 },
+	{ 15, 15 }, // nothingness
 };
+
+int32 dungeon_tileoffs_size = sizeof (dungeon_tileoffs) / sizeof (*dungeon_tileoffs);

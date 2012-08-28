@@ -19,6 +19,7 @@ typedef struct tile_t
 } tile_t;
 
 extern tileoffs_t dungeon_tileoffs [];
+extern int32 dungeon_tileoffs_size;
 enum
 {
 	dun_floor = 0,

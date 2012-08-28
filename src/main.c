@@ -15,6 +15,7 @@
 #include "anim.h"
 #include "obj.h"
 #include "player.h"
+#include "level.h"
 #include "tile.h"
 #include "rndr.h"
 #include "input.h"
@@ -63,6 +64,8 @@ int32 levtiles_offs [17] [16] = // FUCK :(
 	  dun_wall_s + 2, dun_wall_ise + 2 }
 };
 
+level_t *level = NULL;
+
 SDL_Window *win = NULL;
 SDL_Renderer *rndr = NULL;
 
@@ -92,29 +95,36 @@ SDL_Texture *fonttex;
 int8 running = 1;
 uint32 curtick = 0;
 int8 renderlights = 1, renderdbg = 0, editmode = 0; // debug stuff, yay
+obj_t *player;
 
-void update_tiles (SDL_Texture *tiletarg, SDL_Texture *tiletex)
+SDL_Texture *tiletex;
+SDL_Texture *tiletarg;
+void update_tiles (void)
 {
 	int32 i, j;
 	SDL_Rect tilesrc = { .w = 16, .h = 16 };
 	SDL_Rect tiledst = { .w = 16, .h = 16 };
 
 	SDL_SetRenderTarget (rndr, tiletarg);
-	for (i = 0; i < 16; i++)
-		for (j = 0; j < 17; j++)
+	SDL_SetRenderDrawColor (rndr, 0, 0, 0, 255);
+	SDL_RenderClear (rndr);
+	for (i = 0; i < level->w; i++)
+		for (j = 0; j < level->h; j++)
 		{
-			levtiles [i] [j].sheet = tiletex;
-			levtiles [i] [j].offs = dungeon_tileoffs [levtiles_offs [j] [i]];
+			level->tiles [i * level->w + j].sheet = tiletex;
+			level->tiles [i * level->w + j].offs = dungeon_tileoffs [level->offs [i * level->w + j]];
 
 			// set to solid if this isn't a floor
-			if (levtiles_offs [j] [i])
-				levtiles [i] [j].flags |= TF_SOLID;
+			if (level->offs [i * level->w + j])
+				level->tiles [i * level->w + j].flags |= TF_SOLID;
+			else
+				level->tiles [i * level->w + j].flags &= ~TF_SOLID;
 
-			tilesrc.x = levtiles [i] [j].offs.x * 16;
-			tilesrc.y = levtiles [i] [j].offs.y * 16;
+			tilesrc.x = level->tiles [i * level->w + j].offs.x * 16;
+			tilesrc.y = level->tiles [i * level->w + j].offs.y * 16;
 			tiledst.x = i * 16;
 			tiledst.y = j * 16;
-			SDL_RenderCopy (rndr, levtiles [i] [j].sheet, &tilesrc, &tiledst);
+			SDL_RenderCopy (rndr, level->tiles [i * level->w + j].sheet, &tilesrc, &tiledst);
 		}
 
 	SDL_SetRenderTarget (rndr, NULL);
@@ -142,7 +152,7 @@ int main (int argc, char **argv)
 	}
 
 	SDL_Texture *screen = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 256, 160);
-	SDL_Rect camera = { .w = 260, .h = 160 };
+	SDL_Rect camera = { .w = 256, .h = 160 };
 
 	// testing crap now :D
 	nif_t *plsprite = rndr_nif_load ("img/objects/player/male/male.nif");
@@ -154,14 +164,19 @@ int main (int argc, char **argv)
 	nif_t *tilesheet = rndr_nif_load ("img/tiles/dungeon/adungeon.nif");
 	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr->sur), &torch_anim, 0, ROT_DOWN, NULL);
 	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT, NULL);
-	obj_t *player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker);
+	player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker);
 	obj_set_hitbox (player, 8, 16, 16, 16);
 
 	// for now, render the level tiles to a seperate SDL_Texture, to speed things up
-	SDL_Texture *tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet->sur);
-	SDL_Texture *tiletarg = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 16 * 16, 17 * 16);
+	tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet->sur);
+	tiletarg = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 32 * 16, 32 * 16);
 
-	update_tiles (tiletarg, tiletex);
+	level = level_new (32, 32);
+
+	if (!level)
+		return 1;
+
+	update_tiles ();
 
 	// font
 	nif_t *fontspr = rndr_nif_load ("img/gui/font.nif");
@@ -199,18 +214,18 @@ int main (int argc, char **argv)
 		SDL_SetRenderTarget (rndr, screen);
 
 		// Render
-		rndr_do_camera (&camera, player, 16 * 16, 17 * 16);
+		rndr_do_camera (&camera, player, 32 * 16, 32 * 16);
 		rndr_do_tiles (tiletarg, &camera);
 		rndr_do_objs (&camera);
 
 		if (renderlights)
-			rndr_do_lighting (&ambience, &camera, 16, 17);
+			rndr_do_lighting (&ambience, &camera, 32, 32);
 
 		if (renderdbg)
 			rndr_do_debug (frametimes, &camera, player);
 
 		if (editmode)
-			rndr_do_edithud ();
+			rndr_do_edithud (&camera, (player->hitbox.x + player->hitbox.w / 2) / 16, (player->hitbox.y + player->hitbox.h / 2) / 16);
 
 		// Set drawing target to the scaled texture, and copy to it
 		SDL_SetRenderTarget (rndr, NULL);
