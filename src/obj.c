@@ -107,14 +107,17 @@ void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
 	obj->hitbox.x = ((int16) obj->x) + obj->hitb_x;
 	obj->hitbox.y = ((int16) obj->y) + obj->hitb_y;
 
-	if (tiles [((obj->hitbox.x + obj->hitbox.w / 2) / 16) * width + obj->hitbox.y / 16].flags & TF_SOLID)
-		obj->y -= (obj->hitbox.y % 16) - 16;
-	if (tiles [((obj->hitbox.x + obj->hitbox.w / 2) / 16) * width + (obj->hitbox.y + obj->hitbox.h) / 16].flags & TF_SOLID)
-		obj->y -= (obj->hitbox.y % 16) + obj->hitbox.h - 16;
-	if (tiles [(obj->hitbox.x / 16) * width + (obj->hitbox.y + obj->hitbox.h / 2) / 16].flags & TF_SOLID)
-		obj->x -= (obj->hitbox.x % 16) - 16;
-	if (tiles [((obj->hitbox.x + obj->hitbox.w) / 16) * width + (obj->hitbox.y + obj->hitbox.h / 2) / 16].flags & TF_SOLID)
-		obj->x -= (obj->hitbox.x % 16) + obj->hitbox.w - 16;
+	if (!(obj->flags & OF_NOCLIP))
+	{
+		if (tiles [((obj->hitbox.x + obj->hitbox.w / 2) / 16) * width + obj->hitbox.y / 16].flags & TF_SOLID)
+			obj->y -= (obj->hitbox.y % 16) - 16;
+		if (tiles [((obj->hitbox.x + obj->hitbox.w / 2) / 16) * width + (obj->hitbox.y + obj->hitbox.h) / 16].flags & TF_SOLID)
+			obj->y -= (obj->hitbox.y % 16) + obj->hitbox.h - 16;
+		if (tiles [(obj->hitbox.x / 16) * width + (obj->hitbox.y + obj->hitbox.h / 2) / 16].flags & TF_SOLID)
+			obj->x -= (obj->hitbox.x % 16) - 16;
+		if (tiles [((obj->hitbox.x + obj->hitbox.w) / 16) * width + (obj->hitbox.y + obj->hitbox.h / 2) / 16].flags & TF_SOLID)
+			obj->x -= (obj->hitbox.x % 16) + obj->hitbox.w - 16;
+	}
 
 	obj->hitbox.x = ((int16) obj->x) + obj->hitb_x;
 	obj->hitbox.y = ((int16) obj->y) + obj->hitb_y;

@@ -23,12 +23,20 @@ typedef struct obj_s
 	uint8 hitb_x;
 	uint8 hitb_y;
 	SDL_Rect hitbox;
+
+	uint32 flags;
 	void (*thinker) (struct obj_s *obj);
 	struct obj_s *next;
 } obj_t;
 
 // object thinker
 typedef void (*objthink_f) (obj_t *obj);
+
+enum
+{
+	OF_NOCLIP = 1 << 0,
+	OF_NODRAW = 1 << 1
+};
 
 struct tile_t;
 
