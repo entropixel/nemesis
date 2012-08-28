@@ -17,7 +17,7 @@ SRC = $(wildcard src/*.c)
 HDR = $(wildcard src/*.h)
 OBJ = $(patsubst src/%.c,$(OBJDIR)/%.o,$(SRC))
 
-$(OBJDIR)/%.o: src/%.c $(HEADERS)
+$(OBJDIR)/%.o: src/%.c $(HDR)
 	@mkdir -p $(OBJDIR)
 	$(CC) -o $@ $(CFLAGS) -c $<
 
