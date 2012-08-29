@@ -20,75 +20,10 @@
 #include "rndr.h"
 #include "input.h"
 
-tile_t levtiles [16] [17];
-
-int32 levtiles_offs [17] [16] = // FUCK :(
-{
-	{ dun_wall_inw + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2,
-	  dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2, dun_wall_n + 2,
-	  dun_wall_n + 2, dun_wall_ine + 2 },
-	{ dun_wall_w + 2, dun_wall_inw + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1,
-	  dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1, dun_wall_n + 1,
-	  dun_wall_ine + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_inw, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n,
-	  dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_n, dun_wall_ine, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_w, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor, dun_floor,
-	  dun_floor, dun_floor, dun_floor, dun_wall_e, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_w + 1, dun_wall_isw, dun_wall_s, dun_wall_s, dun_wall_s, dun_wall_s, dun_wall_s, dun_wall_s,
-	  dun_wall_s, dun_wall_s, dun_wall_s, dun_wall_s, dun_wall_ise, dun_wall_e + 1, dun_wall_e + 2 },
-	{ dun_wall_w + 2, dun_wall_isw + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1,
-	  dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1, dun_wall_s + 1,
-	  dun_wall_ise + 1, dun_wall_e + 2 },
-	{ dun_wall_isw + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2,
-	  dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2, dun_wall_s + 2,
-	  dun_wall_s + 2, dun_wall_ise + 2 }
-};
-
 level_t *level = NULL;
 
 SDL_Window *win = NULL;
 SDL_Renderer *rndr = NULL;
-
-light_t torch2 =
-{
-	1, 6,
-	28, 100, 142, 24, 10,
-	NULL
-};
-
-light_t torch1 =
-{
-	8, 1,
-	28, 100, 142, 24, 10,
-	&torch2
-};
-
-light_t ambience =
-{
-	0, 0,
-	0, 0, 48, 0, 0,
-	&torch1
-};
 
 static uint16 ticktime = 1000 / 60;
 SDL_Texture *fonttex;
@@ -96,6 +31,7 @@ int8 running = 1;
 uint32 curtick = 0;
 int8 renderlights = 1, renderdbg = 0, editmode = 0; // debug stuff, yay
 obj_t *player;
+SDL_Texture *torchtex;
 
 SDL_Texture *tiletex;
 SDL_Texture *tiletarg;
@@ -162,19 +98,18 @@ int main (int argc, char **argv)
 	rndr_nif_shift (plsprite, 3, 77, 0, -30);
 	nif_t *torchspr = rndr_nif_load ("img/objects/dungeon/adungeon/torches.nif");
 	nif_t *tilesheet = rndr_nif_load ("img/tiles/dungeon/adungeon.nif");
-	obj_t *torch = obj_create (128, 16, SDL_CreateTextureFromSurface (rndr, torchspr->sur), &torch_anim, 0, ROT_DOWN, NULL);
-	obj_t *torchb = obj_create (16, 96, torch->tex, &torch_anim, 0, ROT_RIGHT, NULL);
+	torchtex = SDL_CreateTextureFromSurface (rndr, torchspr->sur);
 	player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker);
 	obj_set_hitbox (player, 8, 16, 16, 16);
 
-	// for now, render the level tiles to a seperate SDL_Texture, to speed things up
-	tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet->sur);
-	tiletarg = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 32 * 16, 32 * 16);
-
-	level = level_new (32, 32);
+	level = level_new (24, 24);
+	rndr_add_light (0, 0, 0, 0, 48, 0, 0); // ambient lighting
 
 	if (!level)
 		return 1;
+
+	tiletex = SDL_CreateTextureFromSurface (rndr, tilesheet->sur);
+	tiletarg = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, level->w * 16, level->h * 16);
 
 	update_tiles ();
 
@@ -214,12 +149,12 @@ int main (int argc, char **argv)
 		SDL_SetRenderTarget (rndr, screen);
 
 		// Render
-		rndr_do_camera (&camera, player, 32 * 16, 32 * 16);
+		rndr_do_camera (&camera, player, level->w * 16, level->h * 16);
 		rndr_do_tiles (tiletarg, &camera);
 		rndr_do_objs (&camera);
 
 		if (renderlights)
-			rndr_do_lighting (&ambience, &camera, 32, 32);
+			rndr_do_lighting (&camera, level->w, level->h);
 
 		if (renderdbg)
 			rndr_do_debug (frametimes, &camera, player);

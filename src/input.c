@@ -7,6 +7,7 @@
 #include "int.h"
 #include "anim.h"
 #include "obj.h"
+#include "rndr.h"
 #include "level.h"
 #include "input.h"
 
@@ -14,6 +15,7 @@ uint32 keymask = 0;
 
 extern int8 renderlights, renderdbg, running, editmode;
 extern obj_t *player;
+extern SDL_Texture *torchtex;
 
 void input_get (SDL_Event *ev)
 {
@@ -61,6 +63,23 @@ void input_get (SDL_Event *ev)
 					case SDLK_d:
 						if (editmode)
 							level_edit_tile (0);
+						break;
+					case SDLK_t:
+					case SDLK_y:
+						if (editmode)
+						{
+							obj_create (((player->hitbox.x + player->hitbox.w / 2) / 16) * 16,
+							            ((player->hitbox.y + player->hitbox.h / 2) / 16) * 16,
+							            torchtex, &torch_anim, 0, player->rot, NULL);
+							if (ev->key.keysym.sym == SDLK_t)
+								rndr_add_light ((player->hitbox.x + player->hitbox.w / 2) / 16,
+							    	            (player->hitbox.y + player->hitbox.h / 2) / 16,
+												28, 100, 142, 24, 10);
+							else
+								rndr_add_light ((player->hitbox.x + player->hitbox.w / 2) / 16,
+							    	            (player->hitbox.y + player->hitbox.h / 2) / 16,
+												28, 100, 107, 24, 10);
+						}
 						break;
 				}
 			break;

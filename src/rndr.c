@@ -24,6 +24,8 @@
 extern SDL_Renderer *rndr;
 extern SDL_Texture *screen;
 
+light_t *light_list_head = NULL, *light_list_tail = NULL;
+
 static inline void rndr_rgb_to_hsl (uint8 *res, uint8 r, uint8 g, uint8 b)
 {
 	uint8 h, s, l;
@@ -315,6 +317,35 @@ void rndr_do_objs (SDL_Rect *camera)
 	return;
 }
 
+void rndr_add_light (uint8 x, uint8 y, uint8 hue, uint8 sat, uint8 bright, uint8 falloff, uint8 flicker)
+{
+	light_t *newlight = malloc (sizeof (light_t));
+
+	if (!newlight)
+		return;
+
+	newlight->x = x;
+	newlight->y = y;
+	newlight->hue = hue;
+	newlight->sat = sat;
+	newlight->bright = bright;
+	newlight->falloff = falloff;
+	newlight->flicker = flicker;
+	newlight->next = NULL;
+
+	if (!light_list_head && !light_list_tail)
+	{
+		light_list_head = light_list_tail = newlight;
+	}
+	else
+	{
+		light_list_tail->next = newlight;
+		light_list_tail = newlight;
+	}
+
+	return;
+}
+
 #define min(a,b) ((a < b) ? a : b)
 static uint8 flicker [64] =
 {
@@ -332,7 +363,7 @@ static uint8 flickindx = 0;
 
 extern uint32 curtick;
 
-void rndr_do_lighting (light_t *l, SDL_Rect *camera, int16 w, int16 h)
+void rndr_do_lighting (SDL_Rect *camera, int16 w, int16 h)
 {
 	// assume 16x10 tiles at 16x16 pixels each
 	int32 i, j; 
@@ -348,7 +379,7 @@ void rndr_do_lighting (light_t *l, SDL_Rect *camera, int16 w, int16 h)
 		for (j = 0; j < h; j++)
 		{
 			rsum = gsum = bsum = 0;
-			it = l;
+			it = light_list_head;
 
 			r.x = i * 16 - camera->x;
 			r.y = j * 16 - camera->y;
