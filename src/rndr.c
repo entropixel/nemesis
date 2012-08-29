@@ -116,7 +116,7 @@ nif_t *rndr_nif_load (const char *path)
 	uint16 width, height;
 	unsigned long imglen, zimglen;
 	uint32 zimglen32, numentr;
-	uint8 *img = NULL, *zimg = NULL;
+	uint8 *img = NULL, *imgcpy = NULL, *zimg = NULL;
 	nif_t *ret = NULL;
 
 	if ((fd = open (path, O_RDONLY | O_BINARY)) < 0)
@@ -132,8 +132,9 @@ nif_t *rndr_nif_load (const char *path)
 	imglen = width * height * 4;
 	zimglen = zimglen32;
 	img = malloc (imglen);
+	imgcpy = malloc (imglen);
 	zimg = malloc (zimglen);
-	if (!img || !zimg)
+	if (!img || !imgcpy || !zimg)
 		goto rndr_nif_load_err;
 
 	do
@@ -156,13 +157,17 @@ nif_t *rndr_nif_load (const char *path)
 	free (zimg);
 	zimg = NULL;
 
+	memcpy (imgcpy, img, imglen);
+
 	ret = malloc (sizeof (nif_t));
 	if (!ret)
 		goto rndr_nif_load_err;
 
 	memset (ret, 0, sizeof (nif_t));
 
-	ret->sur = SDL_CreateRGBSurfaceFrom (img, width, height, 32, width * 4, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+	ret->img = img;
+	ret->sur = SDL_CreateRGBSurfaceFrom (ret->img, width, height, 32, width * 4, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+	ret->orig = imgcpy;
 
 	// load shifts into tables
 	while (read (fd, &numentr, 4) == 4 && i < 32)
@@ -185,6 +190,7 @@ nif_t *rndr_nif_load (const char *path)
 	rndr_nif_load_err:
 	close (fd);
 	free (img);
+	free (imgcpy);
 	free (zimg);
 
 	if (ret && ret->sur)
@@ -222,6 +228,14 @@ void rndr_nif_shift (nif_t *spr, int32 g, int16 hshift, int16 sshift, int16 lshi
 		*pix = (rgb [0] << f->Rshift) | (rgb [1] << f->Gshift) | (rgb [2] << f->Bshift) | (255 << f->Ashift);
 	}
 
+	return;
+}
+
+// resets the pixel data of a nif
+// Use for resetting colors after shifting and making an SDL_Texture
+void rndr_nif_reset (nif_t *spr)
+{
+	memcpy (spr->img, spr->orig, 4 * spr->sur->w * spr->sur->h);
 	return;
 }
 
@@ -339,10 +353,10 @@ void rndr_do_lighting (light_t *l, SDL_Rect *camera, int16 w, int16 h)
 			r.x = i * 16 - camera->x;
 			r.y = j * 16 - camera->y;
 
-			if (r.x < -16
-			 || r.x > camera->w
-			 || r.y < -16
-			 || r.y > camera->h)
+			if (r.x <= -16
+			 || r.x >= camera->w
+			 || r.y <= -16
+			 || r.y >= camera->h)
 				continue;
 
 			while (it)
