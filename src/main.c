@@ -102,8 +102,22 @@ int main (int argc, char **argv)
 	player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker);
 	obj_set_hitbox (player, 8, 16, 16, 16);
 
-	level = level_new (24, 24);
-	rndr_add_light (0, 0, 0, 0, 48, 0, 0); // ambient lighting
+	if (argc < 2)
+	{
+		level = level_new (24, 24, NULL);
+		rndr_add_light (0, 0, 0, 0, 48, 0, 0); // ambient lighting
+	}
+	else
+	{
+		level = level_load (argv [1]);
+		if (!level)
+		{
+			printf ("failed load\n");
+			level = level_new (24, 24, NULL);
+			rndr_add_light (0, 0, 0, 0, 48, 0, 0); // ambient lighting
+		}
+	}
+
 
 	if (!level)
 		return 1;

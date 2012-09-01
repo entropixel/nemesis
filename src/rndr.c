@@ -346,6 +346,22 @@ void rndr_add_light (uint8 x, uint8 y, uint8 hue, uint8 sat, uint8 bright, uint8
 	return;
 }
 
+void rndr_clear_lights (void)
+{
+	light_t *it = light_list_head, *next;
+
+	while (it)
+	{
+		next = it->next;
+		free (it);
+		it = next;
+	}
+
+	light_list_head = light_list_tail = NULL;
+
+	return;
+}
+
 #define min(a,b) ((a < b) ? a : b)
 static uint8 flicker [64] =
 {

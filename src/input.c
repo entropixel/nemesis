@@ -14,7 +14,9 @@
 uint32 keymask = 0;
 
 extern int8 renderlights, renderdbg, running, editmode;
-extern obj_t *player;
+extern obj_t *player, *obj_list_head;
+extern light_t *light_list_head;
+extern level_t *level;
 extern SDL_Texture *torchtex;
 
 void input_get (SDL_Event *ev)
@@ -80,6 +82,25 @@ void input_get (SDL_Event *ev)
 							    	            (player->hitbox.y + player->hitbox.h / 2) / 16,
 												28, 100, 107, 24, 10);
 						}
+						break;
+					case SDLK_c:
+						if (editmode)
+						{
+							obj_t *it = obj_list_head, *next;
+							rndr_clear_lights ();
+							rndr_add_light (0, 0, 0, 0, 48, 0, 0);
+							while (it)
+							{
+								next = it->next;
+								if (it->anim == &torch_anim)
+									obj_destroy (it);
+								it = next;
+							}
+						}
+						break;
+					case SDLK_w:
+						if (editmode)
+							level_save (level);
 						break;
 				}
 			break;

@@ -50,6 +50,30 @@ obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 fram
 	return ret;
 }
 
+void obj_destroy (obj_t *obj)
+{
+	obj_t *it = obj_list_head;
+
+	if (!obj)
+		return;
+
+	// remove object from linked list
+	if (it == obj)
+		obj_list_head = it->next;
+	else
+	{
+		while (it->next != obj)
+			it = it->next;
+
+		it->next = it->next->next;
+		if (!it->next)
+			obj_list_tail = it;
+	}
+
+	free (obj);
+	return;
+}
+
 void obj_set_hitbox (obj_t *obj, uint8 x, uint8 y, uint16 w, uint16 h)
 {
 	obj->hitbox.x = ((int16)obj->x) + x;

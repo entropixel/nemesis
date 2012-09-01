@@ -38,6 +38,7 @@ void rndr_do_camera (SDL_Rect *camera, obj_t *follow, int16 w, int16 h);
 void rndr_do_tiles (SDL_Texture *tiles, SDL_Rect *camera);
 void rndr_do_objs (SDL_Rect *camera);
 void rndr_add_light (uint8 x, uint8 y, uint8 hue, uint8 sat, uint8 bright, uint8 falloff, uint8 flicker);
+void rndr_clear_lights (void);
 void rndr_do_lighting (SDL_Rect *camera, int16 h, int16 w);
 void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player);
 void rndr_do_edithud (SDL_Rect *camera, uint8 selx, uint8 sely);
