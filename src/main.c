@@ -12,6 +12,7 @@
 #endif
 
 #include "int.h"
+#include "xor.h"
 #include "anim.h"
 #include "obj.h"
 #include "player.h"
@@ -87,15 +88,19 @@ int main (int argc, char **argv)
 		return 1;
 	}
 
+	// initialize internal random state
+	xsrand (time (NULL));
+
 	SDL_Texture *screen = SDL_CreateTexture (rndr, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 256, 160);
 	SDL_Rect camera = { .w = 256, .h = 160 };
 
 	// testing crap now :D
+	uint8 playercolor = (xrand () % 8) * 32;
 	nif_t *plsprite = rndr_nif_load ("img/objects/player/male/male.nif");
 	rndr_nif_shift (plsprite, 0, 160, 0, 0);
 	rndr_nif_shift (plsprite, 1, 20, 0, -50);
-	rndr_nif_shift (plsprite, 2, 77, 0, -30);
-	rndr_nif_shift (plsprite, 3, 77, 0, -30);
+	rndr_nif_shift (plsprite, 2, playercolor, 0, -30);
+	rndr_nif_shift (plsprite, 3, playercolor, 0, -30);
 	nif_t *torchspr = rndr_nif_load ("img/objects/dungeon/adungeon/torches.nif");
 	nif_t *tilesheet = rndr_nif_load ("img/tiles/dungeon/adungeon.nif");
 	torchtex = SDL_CreateTextureFromSurface (rndr, torchspr->sur);

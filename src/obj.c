@@ -22,6 +22,8 @@ obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 fram
 	if (!ret)
 		return NULL;
 
+	printf ("adding object\n");
+
 	memset (ret, 0, sizeof (obj_t));
 
 	ret->x = x;
