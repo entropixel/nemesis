@@ -128,28 +128,98 @@ void obj_do_advframes (void) // wrap the above
 	return;
 }
 
-void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
+#define SHB_X 1
+#define SHB_Y 2
+
+static inline void sethitbox (obj_t *obj, uint32 flags)
 {
-	obj->hitbox.x = ((int16) obj->x) + obj->hitb_x;
-	obj->hitbox.y = ((int16) obj->y) + obj->hitb_y;
+	if (flags & SHB_X)
+		obj->hitbox.x = ((int16)obj->x) + obj->hitb_x;
+	if (flags & SHB_Y)
+		obj->hitbox.y = ((int16)obj->y) + obj->hitb_y;
+}
 
-	if (!(obj->flags & OF_NOCLIP))
-	{
-		if (tiles [((obj->hitbox.x + obj->hitbox.w / 2) / 16) * width + obj->hitbox.y / 16].flags & TF_SOLID)
-			obj->y -= (obj->hitbox.y % 16) - 16;
-		if (tiles [((obj->hitbox.x + obj->hitbox.w / 2) / 16) * width + (obj->hitbox.y + obj->hitbox.h) / 16].flags & TF_SOLID)
-			obj->y -= (obj->hitbox.y % 16) + obj->hitbox.h - 16;
-		if (tiles [(obj->hitbox.x / 16) * width + (obj->hitbox.y + obj->hitbox.h / 2) / 16].flags & TF_SOLID)
-			obj->x -= (obj->hitbox.x % 16) - 16;
-		if (tiles [((obj->hitbox.x + obj->hitbox.w) / 16) * width + (obj->hitbox.y + obj->hitbox.h / 2) / 16].flags & TF_SOLID)
-			obj->x -= (obj->hitbox.x % 16) + obj->hitbox.w - 16;
-	}
-
-	obj->hitbox.x = ((int16) obj->x) + obj->hitb_x;
-	obj->hitbox.y = ((int16) obj->y) + obj->hitb_y;
+// Set bounding box and hit values
+static inline void obj_set_bb (obj_t *obj, int32 *boxcoord, uint8 *hit, struct tile_t *tiles, uint16 width)
+{
+	int32 i;
+	/* Determine box coords */
+	// X-Axis
+	boxcoord [0] = boxcoord [4] = obj->hitbox.x / 16;
+	boxcoord [2] = boxcoord [6] = (obj->hitbox.x + obj->hitbox.w - 1) / 16;
+	
+	// Y Axis
+	boxcoord [1] = boxcoord [3] = obj->hitbox.y / 16;
+	boxcoord [5] = boxcoord [7] = (obj->hitbox.y + obj->hitbox.h - 1) / 16;
+	
+	/* Determine corner collision */
+	for (i = 0; i < 4; i++)
+		hit [i] = tiles [(boxcoord [i * 2] * width) + boxcoord [i * 2 + 1]].flags & TF_SOLID;
 
 	return;
 }
+
+void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
+{
+	// (0)----(1)
+	//  |      |  [x, y]
+	//  |      | boxcoord = you
+	// (2)----(3)
+	int32 boxcoord [4] [2];
+	uint8 hit [4];
+	int16 oldx, oldy;
+
+	/* Ignore no-clips */
+	if (obj->flags & OF_NOCLIP)
+	{
+		sethitbox (obj, SHB_X | SHB_Y);
+		return;
+	}
+
+	sethitbox (obj, SHB_X);
+	obj_set_bb (obj, *boxcoord, hit, tiles, width);
+	oldx = obj->hitbox.x;
+
+	/* X Axis Correction */
+	// Moving Left, Left collides
+	if (obj->deltax < 0.0 && (hit [0] || hit [2]))
+	{
+		obj->hitbox.x -= (obj->hitbox.x % 16) - 16;
+		obj->deltax = 0.0;
+	}
+
+	// Moving Right, right collides
+	if (obj->deltax > 0.0 && (hit [1] || hit [3]))
+	{
+		obj->hitbox.x -= (obj->hitbox.x % 16) + obj->hitbox.w - 16;
+		obj->deltax = 0.0;
+	}
+
+	sethitbox (obj, SHB_Y);
+	obj_set_bb (obj, *boxcoord, hit, tiles, width);
+	oldy = obj->hitbox.y;
+
+	/* Y Axis Correction */
+	// Moving Up, top collides
+	if (obj->deltay < 0.0 && (hit [0] || hit [1]))
+	{
+		obj->hitbox.y -= (obj->hitbox.y % 16) - 16;
+		obj->deltay = 0.0;
+	}
+
+	// Moving Down, bottom collides
+	if (obj->deltay > 0.0 && (hit [2] || hit [3]))
+	{
+		obj->hitbox.y -= (obj->hitbox.y % 16) + obj->hitbox.h - 16;
+		obj->deltay = 0.0;
+	}
+	
+	// Correct position
+	obj->x += obj->hitbox.x - oldx;
+	obj->y += obj->hitbox.y - oldy;
+	return;
+}
+
 
 void obj_do_thinkers (void)
 {

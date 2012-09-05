@@ -20,12 +20,15 @@ typedef struct obj_s
 
 	float x;
 	float y;
+	float deltax; // movement deltas
+	float deltay;
 	uint8 hitb_x;
 	uint8 hitb_y;
 	SDL_Rect hitbox;
 
 	uint32 flags;
 	void (*thinker) (struct obj_s *obj);
+	void *data; // generic data storage area
 	struct obj_s *next;
 } obj_t;
 
