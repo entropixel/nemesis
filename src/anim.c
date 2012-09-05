@@ -38,6 +38,22 @@ anim_t char_anim =
 	generic_anim_rots
 };
 
+animframe_t slime_anim_frames [] =
+{
+	{ 0, 20, 1 },
+	{ 6, 20, 2 },
+	{ 7, 20, 3 },
+	{ 6, 20, 0 }
+};
+
+anim_t slime_anim =
+{
+	16,
+	16,
+	slime_anim_frames,
+	generic_anim_rots
+};
+
 animframe_t torch_anim_frames [] =
 {
 	{ 0, 12, 1 },

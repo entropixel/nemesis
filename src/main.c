@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <SDL.h>
 
@@ -102,10 +103,22 @@ int main (int argc, char **argv)
 	rndr_nif_shift (plsprite, 2, playercolor, 0, -30);
 	rndr_nif_shift (plsprite, 3, playercolor, 0, -30);
 	nif_t *torchspr = rndr_nif_load ("img/objects/dungeon/adungeon/torches.nif");
+	nif_t *slimespr = rndr_nif_load ("img/objects/enemy/slime_tiny.nif");
+	rndr_nif_shift (slimespr, 0, 32, -20, 0);
 	nif_t *tilesheet = rndr_nif_load ("img/tiles/dungeon/adungeon.nif");
 	torchtex = SDL_CreateTextureFromSurface (rndr, torchspr->sur);
 	player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker);
 	obj_set_hitbox (player, 8, 16, 16, 16);
+
+	int i;
+
+	for (i = 0; i < 8; i++)
+	{
+		rndr_nif_reset (slimespr);
+		rndr_nif_shift (slimespr, 0, i * 32, -20, 0);
+		obj_create (24 + i * 20, 16, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, NULL);
+	}
+		
 
 	if (argc < 2)
 	{
