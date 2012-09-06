@@ -68,6 +68,37 @@ void update_tiles (void)
 	SDL_SetRenderTarget (rndr, NULL);
 }
 
+typedef struct slimedata_s { float momx; float momy; } slimedata_t;
+
+void slime_thinker (obj_t *obj)
+{
+	slimedata_t *data;
+
+	if (!obj->data)
+	{
+		obj->data = malloc (sizeof (slimedata_t));
+		((slimedata_t*)obj->data)->momx = ((slimedata_t*)obj->data)->momy = 0.0;
+	}
+
+	data = obj->data;
+
+	if (!(curtick % 180))
+	{
+		data->momx = ((float)(xrand () % 10) - 5) / 10.0;
+		data->momy = ((float)(xrand () % 10) - 5) / 10.0;
+	}
+
+	obj->deltax = data->momx;
+	obj->deltay = data->momy;
+
+	obj->x += obj->deltax;
+	obj->y += obj->deltay;
+	obj_collide_tiles (obj, level->tiles, level->w);
+	obj->deltax = obj->deltay = 0.0f;
+
+	return;
+}
+
 int main (int argc, char **argv)
 {
 	if (SDL_Init (SDL_INIT_VIDEO) < 0)
@@ -112,11 +143,13 @@ int main (int argc, char **argv)
 
 	int i;
 
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < 12; i++)
 	{
+		obj_t *slime;
 		rndr_nif_reset (slimespr);
-		rndr_nif_shift (slimespr, 0, i * 32, -20, 0);
-		obj_create (24 + i * 20, 16, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, NULL);
+		rndr_nif_shift (slimespr, 0, xrand () % 256, xrand () % 256, ((int16)(xrand () % 256)) - 128);
+		slime = obj_create (24 + (i % 8) * 20, 16, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, slime_thinker);
+		obj_set_hitbox (slime, 4, 8, 8, 8);
 	}
 		
 

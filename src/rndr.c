@@ -225,8 +225,21 @@ void rndr_nif_shift (nif_t *spr, int32 g, int16 hshift, int16 sshift, int16 lshi
 		// convert pixel's rgb to hsl, shift, and reconvert
 		rndr_rgb_to_hsl (hsl, (*pix & f->Rmask) >> f->Rshift, (*pix & f->Gmask) >> f->Gshift, (*pix & f->Bmask) >> f->Bshift);
 		hsl [0] += hshift;
-		hsl [1] += sshift;
-		hsl [2] += lshift;
+
+		if (sshift < 0 && sshift * -1 > hsl [1])
+			hsl [1] = 0;
+		else if (sshift > 255 - hsl [1])
+			hsl [1] = 255;
+		else
+			hsl [1] += sshift;
+
+		if (lshift < 0 && lshift * -1 > hsl [2])
+			hsl [2] = 0;
+		else if (lshift > 255 - hsl [2])
+			hsl [2] = 255;
+		else
+			hsl [2] += lshift;
+
 		rndr_hsl_to_rgb (rgb, hsl [0], hsl [1], hsl [2]);
 		*pix = (rgb [0] << f->Rshift) | (rgb [1] << f->Gshift) | (rgb [2] << f->Bshift) | (255 << f->Ashift);
 	}
