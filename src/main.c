@@ -68,28 +68,45 @@ void update_tiles (void)
 	SDL_SetRenderTarget (rndr, NULL);
 }
 
-typedef struct slimedata_s { float momx; float momy; } slimedata_t;
-
+#define max(a,b) ((a > b) ? a : b)
 void slime_thinker (obj_t *obj)
 {
-	slimedata_t *data;
+	float distx = player->x - obj->x, disty = player->y - obj->y;
 
-	if (!obj->data)
+	if (fabs (distx) > 3)
 	{
-		obj->data = malloc (sizeof (slimedata_t));
-		((slimedata_t*)obj->data)->momx = ((slimedata_t*)obj->data)->momy = 0.0;
+		obj->deltax = distx / fabs (max (fabs (distx), fabs (disty))) / 2;
+		obj->deltax *= (float)(xrand () % 10) / 5;
 	}
 
-	data = obj->data;
-
-	if (!(curtick % 180))
+	if (fabs (disty) > 3)
 	{
-		data->momx = ((float)(xrand () % 10) - 5) / 10.0;
-		data->momy = ((float)(xrand () % 10) - 5) / 10.0;
+		obj->deltay = disty / fabs (max (fabs (distx), fabs (disty))) / 2;
+		obj->deltay *= (float)(xrand () % 10) / 5;
 	}
 
-	obj->deltax = data->momx;
-	obj->deltay = data->momy;
+	if (player->x - obj->x < -16) // looking left
+	{
+		if (player->y - obj->y < -16) // up-left
+			obj_set_rot (obj, ROT_UPLEFT);
+		else if (player->y - obj->y > 16) // down-left
+			obj_set_rot (obj, ROT_DOWNLEFT);
+		else
+			obj_set_rot (obj, ROT_LEFT);
+	}
+	else if (player->x - obj->x > 16)
+	{
+		if (player->y - obj->y < -16) // up-right
+			obj_set_rot (obj, ROT_UPRIGHT);
+		else if (player->y - obj->y > 16) // down-right
+			obj_set_rot (obj, ROT_DOWNRIGHT);
+		else
+			obj_set_rot (obj, ROT_RIGHT);
+	}
+	else if (player->y > obj->y)
+		obj_set_rot (obj, ROT_DOWN);
+	else
+		obj_set_rot (obj, ROT_UP);
 
 	obj->x += obj->deltax;
 	obj->y += obj->deltay;
@@ -138,17 +155,17 @@ int main (int argc, char **argv)
 	rndr_nif_shift (slimespr, 0, 32, -20, 0);
 	nif_t *tilesheet = rndr_nif_load ("img/tiles/dungeon/adungeon.nif");
 	torchtex = SDL_CreateTextureFromSurface (rndr, torchspr->sur);
-	player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker);
+	player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker, NULL);
 	obj_set_hitbox (player, 8, 16, 16, 16);
 
 	int i;
 
-	for (i = 0; i < 12; i++)
+	for (i = 0; i < 3; i++)
 	{
 		obj_t *slime;
 		rndr_nif_reset (slimespr);
-		rndr_nif_shift (slimespr, 0, xrand () % 256, xrand () % 256, ((int16)(xrand () % 256)) - 128);
-		slime = obj_create (24 + (i % 8) * 20, 16, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, slime_thinker);
+		rndr_nif_shift (slimespr, 0, xrand () % 256, xrand () % 256, ((int16)(xrand () % 128)) - 64);
+		slime = obj_create (24 + (i % 8) * 20, 16, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, slime_thinker, NULL);
 		obj_set_hitbox (slime, 4, 8, 8, 8);
 	}
 		

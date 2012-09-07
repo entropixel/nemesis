@@ -183,7 +183,7 @@ level_t *level_load (const char *path)
 		if (read (fd, &rot, 1) != 1 || read (fd, &x, 4) != 4 || read (fd, &y, 4) != 4)
 			goto level_load_error;
 
-		obj_create (x, y, torchtex, &torch_anim, 0, rot, NULL);
+		obj_create (x, y, torchtex, &torch_anim, 0, rot, NULL, NULL);
 	}
 
 	close (fd);

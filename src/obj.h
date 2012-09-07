@@ -28,12 +28,13 @@ typedef struct obj_s
 
 	uint32 flags;
 	void (*thinker) (struct obj_s *obj);
+	void (*deinit) (struct obj_s *obj);
 	void *data; // generic data storage area
 	struct obj_s *next;
 } obj_t;
 
 // object thinker
-typedef void (*objthink_f) (obj_t *obj);
+typedef void (*obj_f) (obj_t *obj);
 
 enum
 {
@@ -43,7 +44,7 @@ enum
 
 struct tile_t;
 
-obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 frame, uint8 rot, objthink_f thinker);
+obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 frame, uint8 rot, obj_f thinker, obj_f deinit);
 void obj_destroy (obj_t *obj);
 void obj_set_hitbox (obj_t *obj, uint8 x, uint8 y, uint16 w, uint16 h);
 void obj_set_frame (obj_t *obj, uint16 frame);

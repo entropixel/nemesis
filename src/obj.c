@@ -15,7 +15,7 @@
 
 obj_t *obj_list_head = NULL, *obj_list_tail = NULL;
 
-obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 frame, uint8 rot, objthink_f thinker)
+obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 frame, uint8 rot, obj_f thinker, obj_f deinit)
 {
 	obj_t *ret = malloc (sizeof (obj_t));
 
@@ -35,6 +35,7 @@ obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 fram
 	ret->dest.x = (int16) x;
 	ret->dest.y = (int16) y;
 	ret->thinker = thinker;
+	ret->deinit = deinit;
 	ret->next = NULL;
 	obj_set_frame (ret, frame);
 	obj_set_rot (ret, rot);
@@ -71,6 +72,9 @@ void obj_destroy (obj_t *obj)
 		if (!it->next)
 			obj_list_tail = it;
 	}
+
+	if (obj->deinit) // call deconstructor
+		obj->deinit (obj);
 
 	free (obj);
 	return;

@@ -72,7 +72,7 @@ void input_get (SDL_Event *ev)
 						{
 							obj_create (((player->hitbox.x + player->hitbox.w / 2) / 16) * 16,
 							            ((player->hitbox.y + player->hitbox.h / 2) / 16) * 16,
-							            torchtex, &torch_anim, 0, player->rot, NULL);
+							            torchtex, &torch_anim, 0, player->rot, NULL, NULL);
 							if (ev->key.keysym.sym == SDLK_t)
 								rndr_add_light ((player->hitbox.x + player->hitbox.w / 2) / 16,
 							    	            (player->hitbox.y + player->hitbox.h / 2) / 16,
