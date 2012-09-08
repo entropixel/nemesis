@@ -23,23 +23,29 @@ extern int32 dungeon_tileoffs_size;
 enum
 {
 	dun_floor = 0,
-	dun_wall_n = 1,
-	dun_wall_e = 4,
-	dun_wall_s = 7,
-	dun_wall_w = 10,
-	dun_wall_ine = 13,
-	dun_wall_inw = 16,
-	dun_wall_ise = 19,
-	dun_wall_isw = 22,
-	dun_wall_one,
-	dun_wall_onw,
-	dun_wall_ose,
-	dun_wall_osw
+	dun_wall_n = 2,
+	dun_wall_e = 8,
+	dun_wall_s = 14,
+	dun_wall_w = 29,
+	dun_wall_ine = 26,
+	dun_wall_inw = 32,
+	dun_wall_ise = 38,
+	dun_wall_isw = 44,
+	dun_wall_one = 50,
+	dun_wall_onw = 56,
+	dun_wall_ose = 62,
+	dun_wall_osw = 68,
+	dun_stair_n = 74,
+	dun_stair_e = 78,
+	dun_stair_s = 82,
+	dun_stair_w = 86,
+	dun_black = 90,
 };
 
 enum
 {
-	TF_SOLID = 1 << 0
+	TF_SOLID = 1 << 0,
+	TF_STAIR = 1 << 1
 };
 
 #endif // TILE_H__

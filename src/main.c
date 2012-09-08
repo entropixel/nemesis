@@ -53,10 +53,13 @@ void update_tiles (void)
 			level->tiles [i * level->w + j].offs = dungeon_tileoffs [level->offs [i * level->w + j]];
 
 			// set to solid if this isn't a floor
-			if (level->offs [i * level->w + j])
+			if ((level->offs [i * level->w + j] >= dun_wall_n && level->offs [i * level->w + j] <= dun_wall_osw)
+			|| level->offs [i * level->w + j] == dun_black)
 				level->tiles [i * level->w + j].flags |= TF_SOLID;
+			else if (level->offs [i * level->w + j] >= dun_stair_n && level->offs [i * level->w + j] <= dun_stair_w)
+				level->tiles [i * level->w + j].flags |= TF_STAIR;
 			else
-				level->tiles [i * level->w + j].flags &= ~TF_SOLID;
+				level->tiles [i * level->w + j].flags &= ~(TF_SOLID | TF_STAIR);
 
 			tilesrc.x = level->tiles [i * level->w + j].offs.x * 16;
 			tilesrc.y = level->tiles [i * level->w + j].offs.y * 16;
@@ -158,9 +161,10 @@ int main (int argc, char **argv)
 	player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker, NULL);
 	obj_set_hitbox (player, 8, 16, 16, 16);
 
+#if 0
 	int i;
 
-	for (i = 0; i < 3; i++)
+	for (i = 0; i < 4; i++)
 	{
 		obj_t *slime;
 		rndr_nif_reset (slimespr);
@@ -168,7 +172,7 @@ int main (int argc, char **argv)
 		slime = obj_create (24 + (i % 8) * 20, 16, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, slime_thinker, NULL);
 		obj_set_hitbox (slime, 4, 8, 8, 8);
 	}
-		
+#endif	
 
 	if (argc < 2)
 	{
