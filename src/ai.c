@@ -99,6 +99,8 @@ mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l)
 				memcpy (&(ret [--numnodes]), current, sizeof (mapnode_t));
 				current = current->parent;
 			}
+
+			return ret;
 		}
 
 		// move node to closed list
@@ -122,6 +124,9 @@ mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l)
 				uint32 tmpg = current->g;
 
 				if (i < 0 || i > l->w - 1 || j < 0 || j > l->h - 1)
+					continue;
+
+				if (nodelist [i * l->w + current->y].type == N_BLOCKED || nodelist [current->x * l->w + j].type == N_BLOCKED)
 					continue;
 
 				if (i != current->x && j != current->y)

@@ -22,8 +22,6 @@ obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 fram
 	if (!ret)
 		return NULL;
 
-	printf ("adding object\n");
-
 	memset (ret, 0, sizeof (obj_t));
 
 	ret->x = x;
@@ -105,6 +103,34 @@ void obj_set_rot (obj_t *obj, uint8 rot)
 {
 	obj->rot = rot;
 	obj->show.x = obj->anim->rots [obj->rot] * obj->anim->w;
+	return;
+}
+
+void obj_point (obj_t *obj)
+{
+	if (obj->deltax < 0.0) // looking left
+	{
+		if (obj->deltay < 0.0) // up-left
+			obj_set_rot (obj, ROT_UPLEFT);
+		else if (obj->deltay > 0.0) // down-left
+			obj_set_rot (obj, ROT_DOWNLEFT);
+		else
+			obj_set_rot (obj, ROT_LEFT);
+	}
+	else if (obj->deltax > 0.0)
+	{
+		if (obj->deltay < 0.0) // up-right
+			obj_set_rot (obj, ROT_UPRIGHT);
+		else if (obj->deltay > 0.0) // down-right
+			obj_set_rot (obj, ROT_DOWNRIGHT);
+		else
+			obj_set_rot (obj, ROT_RIGHT);
+	}
+	else if (obj->deltay < 0.0)
+		obj_set_rot (obj, ROT_UP);
+	else
+		obj_set_rot (obj, ROT_DOWN);
+
 	return;
 }
 

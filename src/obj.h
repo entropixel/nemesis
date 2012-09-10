@@ -49,6 +49,7 @@ void obj_destroy (obj_t *obj);
 void obj_set_hitbox (obj_t *obj, uint8 x, uint8 y, uint16 w, uint16 h);
 void obj_set_frame (obj_t *obj, uint16 frame);
 void obj_set_rot (obj_t *obj, uint8 rot);
+void obj_point (obj_t *obj);
 void obj_adv_frame (obj_t *obj);
 void obj_do_advframes (void);
 void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width);

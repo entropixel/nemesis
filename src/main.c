@@ -72,45 +72,56 @@ void update_tiles (void)
 	SDL_SetRenderTarget (rndr, NULL);
 }
 
+typedef struct
+{
+	obj_t *target;
+	uint8 targx;
+	uint8 targy;
+	mapnode_t *nodelist;
+	uint16 nodeidx;
+} slime_t;
+
 #define max(a,b) ((a > b) ? a : b)
 void slime_thinker (obj_t *obj)
 {
-	float distx = player->x - obj->x, disty = player->y - obj->y;
+	slime_t *data = obj->data;
+	float distx, disty;
 
-	if (fabs (distx) > 3)
+	// init/update node list if we need to
+	if (!data->nodelist || (data->target->hitbox.x + data->target->hitbox.w / 2) / 16 != data->targx
+	||  (data->target->hitbox.y + data->target->hitbox.h / 2) / 16 != data->targy)
 	{
-		obj->deltax = distx / fabs (max (fabs (distx), fabs (disty))) / 2;
-		obj->deltax *= (float)(xrand () % 10) / 5;
+		data->targx = (data->target->hitbox.x + data->target->hitbox.w / 2) / 16;
+		data->targy = (data->target->hitbox.y + data->target->hitbox.h / 2) / 16;
+		data->nodeidx = 1; // exclude first node since we're on it anyway
+
+		if (data->nodelist)
+			free (data->nodelist);
+
+		data->nodelist = ai_get_path (obj, data->target, level);
+		if (!data->nodelist)
+			return;
 	}
 
-	if (fabs (disty) > 3)
+	distx = (float)(data->nodelist [data->nodeidx].x * 16 + 8) - (obj->hitbox.x + obj->hitbox.w / 2);
+	disty = (float)(data->nodelist [data->nodeidx].y * 16 + 8) - (obj->hitbox.y + obj->hitbox.h / 2);
+
+	if (distx || disty)
 	{
-		obj->deltay = disty / fabs (max (fabs (distx), fabs (disty))) / 2;
-		obj->deltay *= (float)(xrand () % 10) / 5;
+		obj->deltax = distx / fabs (max (fabs (distx), fabs (disty))) / 2.0;
+		obj->deltay = disty / fabs (max (fabs (distx), fabs (disty))) / 2.0;
+
+		obj_point (obj);
+
+		obj->deltax *= (float)(xrand () % 40) / 20.0;
+		obj->deltay *= (float)(xrand () % 40) / 20.0;
 	}
 
-	if (player->x - obj->x < -16) // looking left
+	if (fabs (distx) <= 3.0 && fabs (disty) <= 3.0
+	&& (data->nodelist [data->nodeidx].x != data->targx || data->nodelist [data->nodeidx].y != data->targy))
 	{
-		if (player->y - obj->y < -16) // up-left
-			obj_set_rot (obj, ROT_UPLEFT);
-		else if (player->y - obj->y > 16) // down-left
-			obj_set_rot (obj, ROT_DOWNLEFT);
-		else
-			obj_set_rot (obj, ROT_LEFT);
+		data->nodeidx ++;
 	}
-	else if (player->x - obj->x > 16)
-	{
-		if (player->y - obj->y < -16) // up-right
-			obj_set_rot (obj, ROT_UPRIGHT);
-		else if (player->y - obj->y > 16) // down-right
-			obj_set_rot (obj, ROT_DOWNRIGHT);
-		else
-			obj_set_rot (obj, ROT_RIGHT);
-	}
-	else if (player->y > obj->y)
-		obj_set_rot (obj, ROT_DOWN);
-	else
-		obj_set_rot (obj, ROT_UP);
 
 	obj->x += obj->deltax;
 	obj->y += obj->deltay;
@@ -162,18 +173,24 @@ int main (int argc, char **argv)
 	player = obj_create (64, 64, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker, NULL);
 	obj_set_hitbox (player, 8, 16, 16, 16);
 
-#if 0
 	int i;
 
-	for (i = 0; i < 4; i++)
+	for (i = 0; i < 1; i++)
 	{
 		obj_t *slime;
 		rndr_nif_reset (slimespr);
 		rndr_nif_shift (slimespr, 0, xrand () % 256, xrand () % 256, ((int16)(xrand () % 128)) - 64);
 		slime = obj_create (24 + (i % 8) * 20, 16, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, slime_thinker, NULL);
 		obj_set_hitbox (slime, 4, 8, 8, 8);
+		slime->data = malloc (sizeof (slime_t));
+		if (!slime->data)
+			obj_destroy (slime);
+
+		((slime_t*)slime->data)->target = player;
+		((slime_t*)slime->data)->targx = ((slime_t*)slime->data)->targy = 0;
+		((slime_t*)slime->data)->nodelist = NULL;
+		((slime_t*)slime->data)->nodeidx = 0;
 	}
-#endif	
 
 	if (argc < 2)
 	{
