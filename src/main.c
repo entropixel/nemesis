@@ -21,6 +21,7 @@
 #include "tile.h"
 #include "rndr.h"
 #include "input.h"
+#include "ai.h"
 
 level_t *level = NULL;
 
