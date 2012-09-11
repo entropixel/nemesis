@@ -26,7 +26,7 @@ enum
 	dun_wall_n = 2,
 	dun_wall_e = 8,
 	dun_wall_s = 14,
-	dun_wall_w = 29,
+	dun_wall_w = 20,
 	dun_wall_ine = 26,
 	dun_wall_inw = 32,
 	dun_wall_ise = 38,

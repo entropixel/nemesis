@@ -59,25 +59,25 @@ tileoffs_t dungeon_tileoffs [] =
 	{ 9, 3 },
 	{ 9, 4 },
 	{ 9, 5 },
-	{ 10, 0 }, // inner northeast corner
+	{ 10, 0 }, // outer northeast corner
 	{ 10, 1 },
 	{ 10, 2 },
 	{ 10, 3 },
 	{ 10, 4 },
 	{ 10, 5 },
-	{ 11, 0 }, // inner northwest corner
+	{ 11, 0 }, // outer northwest corner
 	{ 11, 1 },
 	{ 11, 2 },
 	{ 11, 3 },
 	{ 11, 4 },
 	{ 11, 5 },
-	{ 12, 0 }, // inner southeast corner
+	{ 12, 0 }, // outer southeast corner
 	{ 12, 1 },
 	{ 12, 2 },
 	{ 12, 3 },
 	{ 12, 4 },
 	{ 12, 5 },
-	{ 13, 0 }, // inner southwest corner
+	{ 13, 0 }, // outer southwest corner
 	{ 13, 1 },
 	{ 13, 2 },
 	{ 13, 3 },

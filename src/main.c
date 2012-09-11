@@ -54,11 +54,14 @@ void update_tiles (void)
 			level->tiles [i * level->w + j].offs = dungeon_tileoffs [level->offs [i * level->w + j]];
 
 			// set to solid if this isn't a floor
-			if ((level->offs [i * level->w + j] >= dun_wall_n && level->offs [i * level->w + j] <= dun_wall_osw)
+			if ((level->offs [i * level->w + j] >= dun_wall_n && level->offs [i * level->w + j] <= dun_wall_osw + 5)
 			|| level->offs [i * level->w + j] == dun_black)
 				level->tiles [i * level->w + j].flags |= TF_SOLID;
-			else if (level->offs [i * level->w + j] >= dun_stair_n && level->offs [i * level->w + j] <= dun_stair_w)
+			else if (level->offs [i * level->w + j] >= dun_stair_n && level->offs [i * level->w + j] <= dun_stair_w + 3)
+			{
 				level->tiles [i * level->w + j].flags |= TF_STAIR;
+				level->tiles [i * level->w + j].flags &= ~TF_SOLID;
+			}
 			else
 				level->tiles [i * level->w + j].flags &= ~(TF_SOLID | TF_STAIR);
 
@@ -175,7 +178,7 @@ int main (int argc, char **argv)
 
 	int i;
 
-	for (i = 0; i < 1; i++)
+	for (i = 0; i < 2; i++)
 	{
 		obj_t *slime;
 		rndr_nif_reset (slimespr);
