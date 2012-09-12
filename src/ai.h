@@ -23,6 +23,22 @@ typedef struct mapnode_s
 	struct mapnode_s *parent;
 } mapnode_t;
 
+typedef struct
+{
+	obj_t *target;
+	float targx;
+	float targy;
+	mapnode_t *nodelist;
+	uint16 nodeidx;
+	enum
+	{
+		ai_wander,
+		ai_chase,
+		ai_attack
+	} state;
+} aidata_t;
+
 mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l);
+void ai_thinker (obj_t *obj);
 
 #endif // AI_H__

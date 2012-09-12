@@ -40,10 +40,14 @@ anim_t char_anim =
 
 animframe_t slime_anim_frames [] =
 {
-	{ 0, 15, 1 },
-	{ 4, 15, 2 },
-	{ 5, 15, 3 },
-	{ 4, 15, 0 }
+	{ 0, 15, slime_anim_crawl2 },
+	{ 4, 15, slime_anim_crawl3 },
+	{ 5, 15, slime_anim_crawl4 },
+	{ 4, 15, slime_anim_crawl1 },
+	{ 6, 15, slime_anim_attack2 },
+	{ 7, 15, slime_anim_attack3 },
+	{ 6, 15, slime_anim_attack4 },
+	{ 0, 15, slime_anim_crawl1 }
 };
 
 anim_t slime_anim =

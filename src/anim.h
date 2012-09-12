@@ -23,6 +23,18 @@ enum
 
 enum
 {
+	slime_anim_crawl1,
+	slime_anim_crawl2,
+	slime_anim_crawl3,
+	slime_anim_crawl4,
+	slime_anim_attack1,
+	slime_anim_attack2,
+	slime_anim_attack3,
+	slime_anim_attack4,
+};
+
+enum
+{
 	ROT_DOWN,
 	ROT_DOWNRIGHT,
 	ROT_RIGHT,

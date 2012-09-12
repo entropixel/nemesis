@@ -8,6 +8,7 @@
 #include <SDL.h>
 
 #include "int.h"
+#include "xor.h"
 #include "anim.h"
 #include "obj.h"
 #include "level.h"
@@ -151,4 +152,85 @@ mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l)
 	}
 
 	return NULL;
+}
+
+extern level_t *level;
+#define max(a,b) ((a > b) ? a : b)
+void ai_thinker (obj_t *obj)
+{
+	aidata_t *data = obj->data;
+	float distx, disty;
+
+	if (data->state == ai_chase)
+	{
+		// init/update node list if we need to
+		if (!data->nodelist || (data->target->hitbox.x + data->target->hitbox.w / 2) / 16 != data->targx
+		||  (data->target->hitbox.y + data->target->hitbox.h / 2) / 16 != data->targy)
+		{
+			data->targx = (uint8)((data->target->hitbox.x + data->target->hitbox.w / 2) / 16);
+			data->targy = (uint8)((data->target->hitbox.y + data->target->hitbox.h / 2) / 16);
+			data->nodeidx = 1; // exclude first node since we're on it anyway
+	
+			if (data->nodelist)
+				free (data->nodelist);
+	
+			data->nodelist = ai_get_path (obj, data->target, level);
+			if (!data->nodelist)
+				return;
+		}
+	
+		distx = (float)(data->nodelist [data->nodeidx].x * 16 + 8) - (obj->hitbox.x + obj->hitbox.w / 2);
+		disty = (float)(data->nodelist [data->nodeidx].y * 16 + 8) - (obj->hitbox.y + obj->hitbox.h / 2);
+	
+		if (distx || disty)
+		{
+			obj->deltax = distx / fabs (max (fabs (distx), fabs (disty))) / 2.0;
+			obj->deltay = disty / fabs (max (fabs (distx), fabs (disty))) / 2.0;
+	
+			obj_point (obj);
+	
+			obj->deltax *= (float)(xrand () % 40) / 20.0;
+			obj->deltay *= (float)(xrand () % 40) / 20.0;
+		}
+	
+		if (fabs (distx) <= 3.0 && fabs (disty) <= 3.0
+		&& (data->nodelist [data->nodeidx].x != (uint8)data->targx || data->nodelist [data->nodeidx].y != (uint8)data->targy))
+		{
+			data->nodeidx ++;
+		}
+	}
+	else if (data->state == ai_attack)
+	{
+		distx = data->targx - (obj->hitbox.x + obj->hitbox.w / 2);
+		disty = data->targy - (obj->hitbox.y + obj->hitbox.h / 2);
+
+		if (distx || disty)
+		{
+			obj->deltax = distx / 23.0;
+			obj->deltay = disty / 23.0;
+
+			obj_point (obj);
+		}
+
+		if (obj->frame == slime_anim_crawl1) // attack over
+			data->state = ai_chase;
+	}
+
+	// in range of player?
+	if (abs ((data->target->hitbox.x + data->target->hitbox.w / 2) - (obj->hitbox.x + obj->hitbox.w / 2)) < 24
+	&& abs ((data->target->hitbox.y + data->target->hitbox.h / 2) - (obj->hitbox.y + obj->hitbox.h / 2)) < 24
+	&& data->state != ai_attack)
+	{
+		obj_set_frame (obj, slime_anim_attack1);
+		data->targx = data->target->hitbox.x + data->target->hitbox.w / 2;
+		data->targy = data->target->hitbox.y + data->target->hitbox.h / 2;
+		data->state = ai_attack;
+	}
+
+	obj->x += obj->deltax;
+	obj->y += obj->deltay;
+	obj_collide_tiles (obj, level->tiles, level->w);
+	obj->deltax = obj->deltay = 0.0f;
+
+	return;
 }
