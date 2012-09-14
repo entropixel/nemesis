@@ -9,6 +9,7 @@
 #include "obj.h"
 #include "rndr.h"
 #include "level.h"
+#include "tile.h"
 #include "input.h"
 
 uint32 keymask = 0;
@@ -65,6 +66,25 @@ void input_get (SDL_Event *ev)
 					case SDLK_d:
 						if (editmode)
 							level_edit_tile (0);
+						break;
+					case SDLK_z:
+					case SDLK_x:
+						if (editmode)
+						{
+						uint8 *t = &level->tiles [(player->hitbox.x + player->hitbox.w / 2) / 16 * level->w + (player->hitbox.y + player->hitbox.h / 2) / 16].level;
+							if (ev->key.keysym.sym == SDLK_z)
+							{
+								if (!(*t))
+									*t = 2;
+								else
+									(*t) --;
+							}
+							else
+							{
+								(*t) ++;
+								*t %= 3;
+							}
+						}
 						break;
 					case SDLK_t:
 					case SDLK_y:

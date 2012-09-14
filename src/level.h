@@ -7,7 +7,7 @@
 
 struct tile_t;
 
-typedef struct
+typedef struct level_t
 {
 	char path [32];
 

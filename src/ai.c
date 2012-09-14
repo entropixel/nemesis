@@ -155,11 +155,15 @@ mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l)
 }
 
 extern level_t *level;
+extern uint8 editmode;
 #define max(a,b) ((a > b) ? a : b)
 void ai_thinker (obj_t *obj)
 {
 	aidata_t *data = obj->data;
 	float distx, disty;
+
+	if (editmode)
+		return;
 
 	if (data->state == ai_chase)
 	{

@@ -15,6 +15,7 @@ typedef struct tile_t
 {
 	SDL_Texture *sheet;
 	tileoffs_t offs;
+	uint8 level;
 	uint16 flags;
 } tile_t;
 

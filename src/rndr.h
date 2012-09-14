@@ -30,6 +30,8 @@ typedef struct
 	} shifts [32];
 } nif_t;
 
+struct level_t;
+
 nif_t *rndr_nif_load (const char *path);
 void rndr_nif_shift (nif_t *spr, int32 g, int16 hshift, int16 sshift, int16 lshift);
 void rndr_nif_reset (nif_t *spr);
@@ -39,8 +41,9 @@ void rndr_do_tiles (SDL_Texture *tiles, SDL_Rect *camera);
 void rndr_do_objs (SDL_Rect *camera);
 void rndr_add_light (uint8 x, uint8 y, uint8 hue, uint8 sat, uint8 bright, uint8 falloff, uint8 flicker);
 void rndr_clear_lights (void);
-void rndr_do_lighting (SDL_Rect *camera, int16 h, int16 w);
+void rndr_do_lighting (SDL_Rect *camera, struct level_t *l);
+void rndr_do_hud (void);
 void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player);
-void rndr_do_edithud (SDL_Rect *camera, uint8 selx, uint8 sely);
+void rndr_do_edithud (SDL_Rect *camera, struct level_t *l, uint8 selx, uint8 sely);
 
 #endif // RNDR_H__

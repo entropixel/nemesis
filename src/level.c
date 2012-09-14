@@ -73,12 +73,16 @@ void level_save (level_t *l)
 	if (fd < 0)
 		return;
 
+	printf ("Saving: %s\n", l->path);
+
 	if (write (fd, &(l->w), 1) != 1 || write (fd, &(l->w), 1) != 1)
 		goto level_save_error;
 
 	for (i = 0; i < l->w; i++)
 		for (j = 0; j < l->h; j++)
-			if (write (fd, &(l->tiles [i * l->w + j].flags), 2) != 2 || write (fd, &(l->offs [i * l->w + j]), 4) != 4)
+			if (write (fd, &(l->tiles [i * l->w + j].flags), 2) != 2
+			 || write (fd, &(l->offs [i * l->w + j]), 4) != 4
+			 || write (fd, &(l->tiles [i * l->w + j].level), 1) != 1)
 				goto level_save_error;
 
 	i = 0;
@@ -95,15 +99,12 @@ void level_save (level_t *l)
 		total += write (fd, &(light_it->falloff), 1);
 		total += write (fd, &(light_it->flicker), 1);
 
-		printf ("saving light: %i\n", total);
 		if (total != 7)
 			goto level_save_error;
 
 		light_it = light_it->next;
 		i ++;
 	}
-
-	printf ("Completed light loop\n");
 
 	lseek (fd, pos, SEEK_SET);
 	write (fd, &i, 4);
@@ -147,13 +148,13 @@ level_t *level_load (const char *path)
 
 	for (i = 0; i < w; i++)
 		for (j = 0; j < h; j++)
-			if (read (fd, &(ret->tiles [i * w + j].flags), 2) != 2 || read (fd, &(ret->offs [i * w + j]), 4) != 4)
+			if (read (fd, &(ret->tiles [i * w + j].flags), 2) != 2
+			 || read (fd, &(ret->offs [i * w + j]), 4) != 4
+			 || read (fd, &(ret->tiles [i * w + j].level), 1) != 1)
 				goto level_load_error;
 
 	if (read (fd, &numlights, 4) != 4)
 		goto level_load_error;
-
-	printf ("read %i lights\n", numlights);
 
 	for (i = 0; i < numlights; i++)
 	{
@@ -171,7 +172,6 @@ level_t *level_load (const char *path)
 		if (total != 7)
 			goto level_load_error;
 
-		printf ("adding light %i %i %i %i %i %i %i\n", x, y, hue, sat, bright, falloff, flicker);
 		rndr_add_light (x, y, hue, sat, bright, falloff, flicker);
 	}
 

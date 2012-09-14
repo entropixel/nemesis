@@ -213,13 +213,13 @@ int main (int argc, char **argv)
 		rndr_do_objs (&camera);
 
 		if (renderlights)
-			rndr_do_lighting (&camera, level->w, level->h);
+			rndr_do_lighting (&camera, level);
 
 		if (renderdbg)
 			rndr_do_debug (frametimes, &camera, player);
 
 		if (editmode)
-			rndr_do_edithud (&camera, (player->hitbox.x + player->hitbox.w / 2) / 16, (player->hitbox.y + player->hitbox.h / 2) / 16);
+			rndr_do_edithud (&camera, level, (player->hitbox.x + player->hitbox.w / 2) / 16, (player->hitbox.y + player->hitbox.h / 2) / 16);
 
 		if (!editmode && !renderdbg)
 			rndr_do_hud ();

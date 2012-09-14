@@ -16,6 +16,8 @@
 #include "anim.h"
 #include "obj.h"
 #include "rndr.h"
+#include "level.h"
+#include "tile.h"
 
 // Let's trust that systems without O_BINARY use binary mode by default
 #ifndef O_BINARY
@@ -380,9 +382,8 @@ void rndr_clear_lights (void)
 static uint8 flicker [8];
 static uint32 flickindx;
 extern uint32 curtick;
-void rndr_do_lighting (SDL_Rect *camera, int16 w, int16 h)
+void rndr_do_lighting (SDL_Rect *camera, struct level_t *l)
 {
-	// assume 16x10 tiles at 16x16 pixels each
 	int32 i, j; 
 	uint8 rgb [3];
 	int32 rsum, gsum, bsum, sub;
@@ -393,8 +394,8 @@ void rndr_do_lighting (SDL_Rect *camera, int16 w, int16 h)
 		for (i = 0; i < 8; i++)
 			flicker [i] = xrand () & 0xff;
 
-	for (i = 0; i < w; i++)
-		for (j = 0; j < h; j++)
+	for (i = camera->x / 16; i < camera->x / 16 + camera->w / 16 + 1; i++)
+		for (j = camera->y / 16; j < camera->y / 16 + camera->h / 16 + 1; j++)
 		{
 			rsum = gsum = bsum = 0;
 			it = light_list_head;
@@ -403,18 +404,14 @@ void rndr_do_lighting (SDL_Rect *camera, int16 w, int16 h)
 			r.x = i * 16 - camera->x;
 			r.y = j * 16 - camera->y;
 
-			if (r.x <= -16
-			 || r.x >= camera->w
-			 || r.y <= -16
-			 || r.y >= camera->h)
-				continue;
-
 			while (it)
 			{
 				sub = it->falloff * sqrt ((i - it->x) * (i - it->x) + (j - it->y) * (j - it->y));
 
 				if (it->flicker)
 					sub -= flicker [++flickindx % 8] % it->flicker;
+
+				sub += (2 - l->tiles [i * l->w + j].level) * 10; // lower level - lower light
 
 				if (sub < 255)
 				{
@@ -497,10 +494,11 @@ void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player)
 	return;
 }
 
-void rndr_do_edithud (SDL_Rect *camera, uint8 selx, uint8 sely)
+void rndr_do_edithud (SDL_Rect *camera, struct level_t *l, uint8 selx, uint8 sely)
 {
 	static SDL_Rect txtrct = { .x = 215, .y = 8 };
 	static SDL_Texture *edittxt = NULL;
+	char tilelevel [3] = "(0)";
 	SDL_Point selbox [5] =
 	{
 		{ selx * 16 - camera->x, sely * 16 - camera->y },
@@ -513,9 +511,12 @@ void rndr_do_edithud (SDL_Rect *camera, uint8 selx, uint8 sely)
 	if (!edittxt)
 		edittxt = rndr_make_text ("edit", &txtrct);
 
+	sprintf (tilelevel, "(%u)", l->tiles [selx * l->w + sely].level);
+
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_NONE);
 	SDL_SetRenderDrawColor (rndr, 255, 255, 255, 255);
 	SDL_RenderCopy (rndr, edittxt, NULL, &txtrct);
+	rndr_print_text (tilelevel, 223, 16);
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_BLEND);
 	SDL_RenderDrawLines (rndr, selbox, 5);
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
