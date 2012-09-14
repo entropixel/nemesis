@@ -294,8 +294,20 @@ SDL_Texture *rndr_make_text (const char *text, SDL_Rect *inf)
 
 void rndr_do_camera (SDL_Rect *camera, obj_t *follow, int16 w, int16 h)
 {
-	camera->x = ((int16)follow->x) + (follow->dest.w >> 1) - 128;
-	camera->y = ((int16)follow->y) + (follow->dest.h >> 1) - 80;
+	static uint8 xslack = 32, yslack = 20;
+	int16 tmpx, tmpy;
+
+	tmpx = (follow->hitbox.x + follow->hitbox.w / 2) - (camera->x + camera->w / 2);
+	tmpy = (follow->hitbox.y + follow->hitbox.h / 2) - (camera->y + camera->h / 2);
+
+	if (tmpx > xslack)
+		camera->x += tmpx - xslack;
+	if (tmpx < -xslack)
+		camera->x += tmpx + xslack;
+	if (tmpy > yslack)
+		camera->y += tmpy - yslack;
+	if (tmpy < -yslack)
+		camera->y += tmpy + yslack;
 
 	// clamp values
 	camera->x = (camera->x < 0) ? 0 : camera->x;
@@ -498,7 +510,7 @@ void rndr_do_edithud (SDL_Rect *camera, struct level_t *l, uint8 selx, uint8 sel
 {
 	static SDL_Rect txtrct = { .x = 215, .y = 8 };
 	static SDL_Texture *edittxt = NULL;
-	char tilelevel [3] = "(0)";
+	char tilelevel [4] = "(0)";
 	SDL_Point selbox [5] =
 	{
 		{ selx * 16 - camera->x, sely * 16 - camera->y },
