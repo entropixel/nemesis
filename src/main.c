@@ -35,6 +35,7 @@ uint32 curtick = 0;
 int8 renderlights = 1, renderdbg = 0, editmode = 0; // debug stuff, yay
 obj_t *player;
 SDL_Texture *torchtex;
+SDL_Texture *hudbars, *hfill, *mfill;
 
 SDL_Texture *tiletex;
 SDL_Texture *tiletarg;
@@ -85,6 +86,7 @@ int main (int argc, char **argv)
 
 	if (!(win = SDL_CreateWindow ("nemesis (" __DATE__ ")", SDL_WINDOWPOS_CENTERED,
 	                              SDL_WINDOWPOS_CENTERED, 512, 320, 0)))
+//	                              SDL_WINDOWPOS_CENTERED, 256, 160, 0)))
 	{
 		fprintf (stderr, "SDL_CreateWindow failed (%s)\n", SDL_GetError ());
 		return 1;
@@ -114,6 +116,14 @@ int main (int argc, char **argv)
 	rndr_nif_shift (slimespr, 0, 32, -20, 0);
 	nif_t *tilesheet = rndr_nif_load ("img/tiles/dungeon/adungeon.nif");
 	torchtex = SDL_CreateTextureFromSurface (rndr, torchspr->sur);
+	nif_t *hudbarspr = rndr_nif_load ("img/gui/bar.nif");
+	nif_t *hudfillspr = rndr_nif_load ("img/gui/barfrag.nif");
+	hudbars = SDL_CreateTextureFromSurface (rndr, hudbarspr->sur);
+	rndr_nif_shift (hudfillspr, 0, 247, 255, 0);
+	hfill = SDL_CreateTextureFromSurface (rndr, hudfillspr->sur);
+	rndr_nif_reset (hudfillspr);
+	rndr_nif_shift (hudfillspr, 0, 143, 255, 0);
+	mfill = SDL_CreateTextureFromSurface (rndr, hudfillspr->sur);
 	player = obj_create (64, 128, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker, NULL);
 	obj_set_hitbox (player, 8, 16, 16, 16);
 
@@ -210,6 +220,9 @@ int main (int argc, char **argv)
 
 		if (editmode)
 			rndr_do_edithud (&camera, (player->hitbox.x + player->hitbox.w / 2) / 16, (player->hitbox.y + player->hitbox.h / 2) / 16);
+
+		if (!editmode && !renderdbg)
+			rndr_do_hud ();
 
 		// Set drawing target to the scaled texture, and copy to it
 		SDL_SetRenderTarget (rndr, NULL);

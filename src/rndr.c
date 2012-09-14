@@ -434,6 +434,21 @@ void rndr_do_lighting (SDL_Rect *camera, int16 w, int16 h)
 	return;
 }
 
+extern SDL_Texture *hudbars, *hfill, *mfill;
+
+void rndr_do_hud (void)
+{
+	SDL_Rect hudrect = { 4, 4, 64, 16 };
+	SDL_Rect bar = { 7, 7, 180, 4 };
+	SDL_RenderCopy (rndr, hudbars, NULL, &hudrect);
+	SDL_RenderCopy (rndr, hfill, NULL, &bar);
+	bar.y += 5;
+	bar.w -= 60;
+	SDL_RenderCopy (rndr, mfill, NULL, &bar);
+
+	return;
+}
+
 void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player)
 {
 	int32 i;
