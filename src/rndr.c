@@ -396,7 +396,7 @@ static uint32 flickindx;
 extern uint32 curtick;
 void rndr_do_lighting (SDL_Rect *camera, struct level_t *l)
 {
-	int32 i, j; 
+	int32 i, j, k; 
 	uint8 rgb [3];
 	int32 rsum, gsum, bsum, sub;
 	light_t *it;
@@ -420,10 +420,19 @@ void rndr_do_lighting (SDL_Rect *camera, struct level_t *l)
 			{
 				sub = it->falloff * sqrt ((i - it->x) * (i - it->x) + (j - it->y) * (j - it->y));
 
-				if (it->flicker)
+				if (it->flicker) // random addition to brightness for light flickering
 					sub -= flicker [++flickindx % 8] % it->flicker;
 
-				sub += (2 - l->tiles [i * l->w + j].level) * 10; // lower level - lower light
+				sub += (2 - l->tiles [i * l->w + j].level) * 5; // lower level - lower light
+
+				if (it->falloff)
+				{
+					for (k = l->tiles [i * l->w + j].level; k > l->tiles [it->x * l->w + it->y].level; k--)
+						sub += it->falloff * 2;
+
+					for (k = l->tiles [i * l->w + j].level; k < l->tiles [it->x * l->w + it->y].level; k++)
+						sub += it->falloff;
+				}
 
 				if (sub < 255)
 				{
