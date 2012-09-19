@@ -16,7 +16,7 @@ extern level_t *level;
 
 void player_thinker (obj_t *obj)
 {
-	if (keymask)
+	if (keymask & (UPK | RIGHTK | DOWNK | LEFTK) && !(keymask & ATK) && obj->frame < char_anim_punch1)
 	{
 		if (obj->frame == char_anim_idle1 || obj->frame == char_anim_idle2)
 			obj_set_frame (obj, char_anim_walk1);
@@ -70,7 +70,11 @@ void player_thinker (obj_t *obj)
 		obj->deltax = obj->deltay = 0.0f;
 
 	}
-	else if (obj->frame != char_anim_idle1 && obj->frame != char_anim_idle2)
+	else if (keymask & ATK && obj->frame < char_anim_punch1)
+	{
+		obj_set_frame (obj, char_anim_punch1);
+	}
+	else if (obj->frame != char_anim_idle1 && obj->frame != char_anim_idle2 && obj->frame < char_anim_punch1)
 		obj_set_frame (obj, char_anim_idle1);
 
 	return;

@@ -19,6 +19,9 @@ enum
 	char_anim_walk6,
 	char_anim_walk7,
 	char_anim_walk8,
+	char_anim_punch1,
+	char_anim_punch2,
+	char_anim_punch3,
 };
 
 enum

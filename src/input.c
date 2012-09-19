@@ -67,6 +67,9 @@ void input_get (SDL_Event *ev)
 						if (editmode)
 							level_edit_tile (0);
 						break;
+					case SDLK_f:
+						keymask &= ~(ATK);
+						break;
 					case SDLK_z:
 					case SDLK_x:
 						if (editmode)
@@ -139,6 +142,8 @@ void input_get (SDL_Event *ev)
 					case SDLK_LEFT:
 						keymask |= LEFTK;
 						break;
+					case SDLK_f:
+						keymask |= ATK;
 				}
 			break;
 			case SDL_QUIT:

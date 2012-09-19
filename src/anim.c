@@ -27,7 +27,10 @@ animframe_t char_anim_frames [] =
 	{ 0, 4, char_anim_walk6 },
 	{ 6, 4, char_anim_walk7 },
 	{ 7, 4, char_anim_walk8 },
-	{ 6, 4, char_anim_walk1 }
+	{ 6, 4, char_anim_walk1 },
+	{ 8, 6, char_anim_punch2 },
+	{ 9, 6, char_anim_punch3 },
+	{ 10, 6, char_anim_idle1 }
 };
 
 anim_t char_anim =

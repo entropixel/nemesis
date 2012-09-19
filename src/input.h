@@ -12,7 +12,8 @@ enum
 	UPK = 1,
 	RIGHTK = 2,
 	DOWNK = 4,
-	LEFTK = 8
+	LEFTK = 8,
+	ATK = 16
 };
 
 extern uint32 keymask;
