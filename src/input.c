@@ -74,7 +74,7 @@ void input_get (SDL_Event *ev)
 					case SDLK_x:
 						if (editmode)
 						{
-						uint8 *t = &level->tiles [(player->hitbox.x + player->hitbox.w / 2) / 16 * level->w + (player->hitbox.y + player->hitbox.h / 2) / 16].level;
+						uint8 *t = &level->tiles [(obj_centerx (player) >> FRAC * 2) * level->w + (obj_centery (player) >> FRAC * 2)].level;
 							if (ev->key.keysym.sym == SDLK_z)
 							{
 								if (!(*t))
@@ -93,16 +93,14 @@ void input_get (SDL_Event *ev)
 					case SDLK_y:
 						if (editmode)
 						{
-							obj_create (((player->hitbox.x + player->hitbox.w / 2) / 16) * 16,
-							            ((player->hitbox.y + player->hitbox.h / 2) / 16) * 16,
+							obj_create ((obj_centerx (player) >> FRAC * 2) << FRAC * 2,
+							            (obj_centery (player) >> FRAC * 2) << FRAC * 2,
 							            torchtex, &torch_anim, 0, player->rot, NULL, NULL);
 							if (ev->key.keysym.sym == SDLK_t)
-								rndr_add_light ((player->hitbox.x + player->hitbox.w / 2) / 16,
-							    	            (player->hitbox.y + player->hitbox.h / 2) / 16,
+								rndr_add_light (obj_centerx (player) >> FRAC * 2, obj_centery (player) >> FRAC * 2,
 												28, 100, 142, 24, 10);
 							else
-								rndr_add_light ((player->hitbox.x + player->hitbox.w / 2) / 16,
-							    	            (player->hitbox.y + player->hitbox.h / 2) / 16,
+								rndr_add_light (obj_centerx (player) >> FRAC * 2, obj_centery (player) >> FRAC * 2,
 												28, 100, 107, 24, 10);
 						}
 						break;

@@ -125,17 +125,18 @@ int main (int argc, char **argv)
 	rndr_nif_shift (hudfillspr, 0, 143, 255, 0);
 	mfill = SDL_CreateTextureFromSurface (rndr, hudfillspr->sur);
 	player = obj_create (64, 128, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker, NULL);
-	obj_set_hitbox (player, 8, 16, 16, 16);
+	obj_set_hitbox (player, 8 << FRAC, 16 << FRAC, 16 << FRAC, 16 << FRAC);
 
 	int i;
 
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < 1; i++)
 	{
 		obj_t *slime;
 		rndr_nif_reset (slimespr);
 		rndr_nif_shift (slimespr, 0, xrand () % 256, xrand () % 256, ((int16)(xrand () % 128)) - 64);
 		slime = obj_create (24 + (i % 8) * 20, 16, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, ai_thinker, NULL);
-		obj_set_hitbox (slime, 4, 8, 8, 8);
+		obj_set_hitbox (slime, 4 << FRAC, 8 << FRAC, 8 << FRAC, 8 << FRAC);
+		slime->flags |= OF_NOCLIP;
 		slime->data = malloc (sizeof (aidata_t));
 		if (!slime->data)
 			obj_destroy (slime);
@@ -219,7 +220,7 @@ int main (int argc, char **argv)
 			rndr_do_debug (frametimes, &camera, player);
 
 		if (editmode)
-			rndr_do_edithud (&camera, level, (player->hitbox.x + player->hitbox.w / 2) / 16, (player->hitbox.y + player->hitbox.h / 2) / 16);
+			rndr_do_edithud (&camera, level, obj_centerx (player) >> FRAC * 2, obj_centery (player) >> FRAC * 2);
 
 		if (!editmode && !renderdbg)
 			rndr_do_hud ();

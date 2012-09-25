@@ -25,39 +25,39 @@ void player_thinker (obj_t *obj)
 		{
 			case UPK:
 				obj_set_rot (obj, ROT_UP);
-				obj->deltay = -1.41f;
+				obj->deltay = -23;
 			break;
 			case UPK | RIGHTK:
 				obj_set_rot (obj, ROT_UPRIGHT);
-				obj->deltax = 1.0f;
-				obj->deltay = -1.0f;
+				obj->deltax = 16;
+				obj->deltay = -16;
 			break;
 			case RIGHTK:
 				obj_set_rot (obj, ROT_RIGHT);
-				obj->deltax = 1.41f;
+				obj->deltax = 23;
 			break;
 			case RIGHTK | DOWNK:
 				obj_set_rot (obj, ROT_DOWNRIGHT);
-				obj->deltax = 1.0f;
-				obj->deltay = 1.0f;
+				obj->deltax = 16;
+				obj->deltay = 16;
 			break;
 			case DOWNK:
 				obj_set_rot (obj, ROT_DOWN);
-				obj->deltay = 1.41f;
+				obj->deltay = 23;
 			break;
 			case DOWNK | LEFTK:
 				obj_set_rot (obj, ROT_DOWNLEFT);
-				obj->deltax = -1.0f;
-				obj->deltay = 1.0f;
+				obj->deltax = -16;
+				obj->deltay = 16;
 			break;
 			case LEFTK:
 				obj_set_rot (obj, ROT_LEFT);
-				obj->deltax = -1.41f;
+				obj->deltax = -23;
 			break;
 			case LEFTK | UPK:
 				obj_set_rot (obj, ROT_UPLEFT);
-				obj->deltax = -1.0f;
-				obj->deltay = -1.0f;
+				obj->deltax = -16;
+				obj->deltay = -16;
 			break;
 			default:
 				obj_set_frame (obj, char_anim_idle1);
@@ -67,7 +67,7 @@ void player_thinker (obj_t *obj)
 		obj->x += obj->deltax;
 		obj->y += obj->deltay;
 		obj_collide_tiles (obj, level->tiles, level->w);
-		obj->deltax = obj->deltay = 0.0f;
+		obj->deltax = obj->deltay = 0;
 
 	}
 	else if (keymask & ATK && obj->frame < char_anim_punch1)

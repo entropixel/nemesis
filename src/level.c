@@ -112,7 +112,8 @@ void level_save (level_t *l)
 
 	while (obj_it)
 	{
-		uint32 x = (uint32)obj_it->x, y = (uint32)obj_it->y;
+		// FIXME: These are actually int16 (blame Tempest)
+		int32 x = (int32)obj_it->x, y = (int32)obj_it->y;
 
 		if (obj_it->anim == &torch_anim)
 			if (write (fd, &(obj_it->rot), 1) != 1 || write (fd, &x, 4) != 4 || write (fd, &y, 4) != 4)
@@ -178,12 +179,12 @@ level_t *level_load (const char *path)
 	for (i = 0; i < numlights - 1; i++)
 	{
 		uint8 rot;
-		uint32 x, y;
+		int32 x, y;
 
 		if (read (fd, &rot, 1) != 1 || read (fd, &x, 4) != 4 || read (fd, &y, 4) != 4)
 			goto level_load_error;
 
-		obj_create (x, y, torchtex, &torch_anim, 0, rot, NULL, NULL);
+		obj_create ((fixed)x, (fixed)y, torchtex, &torch_anim, 0, rot, NULL, NULL);
 	}
 
 	close (fd);
@@ -207,7 +208,7 @@ extern obj_t *player;
 void level_edit_tile (int8 offs)
 {
 	static uint32 lastused = 0;
-	uint32 *level_offs = &(level->offs [((player->hitbox.x + player->hitbox.w / 2) / 16) * level->w + ((player->hitbox.y + player->hitbox.h / 2) / 16)]);
+	uint32 *level_offs = &(level->offs [(obj_centerx (player) >> FRAC * 2) * level->w + (obj_centery (player) >> FRAC * 2)]);
 
 	if (!(*level_offs))
 		*level_offs = dungeon_tileoffs_size;

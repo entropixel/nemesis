@@ -15,7 +15,7 @@
 
 obj_t *obj_list_head = NULL, *obj_list_tail = NULL;
 
-obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 frame, uint8 rot, obj_f thinker, obj_f deinit)
+obj_t *obj_create (fixed x, fixed y, SDL_Texture *tex, anim_t *anim, uint16 frame, uint8 rot, obj_f thinker, obj_f deinit)
 {
 	obj_t *ret = malloc (sizeof (obj_t));
 
@@ -30,8 +30,8 @@ obj_t *obj_create (float x, float y, SDL_Texture *tex, anim_t *anim, uint16 fram
 	ret->anim = anim;
 	ret->show.w = ret->dest.w = ret->anim->w;
 	ret->show.h = ret->dest.h = ret->anim->h;
-	ret->dest.x = (int16) x;
-	ret->dest.y = (int16) y;
+	ret->dest.x = x >> FRAC;
+	ret->dest.y = y >> FRAC;
 	ret->thinker = thinker;
 	ret->deinit = deinit;
 	ret->next = NULL;
@@ -78,17 +78,28 @@ void obj_destroy (obj_t *obj)
 	return;
 }
 
-void obj_set_hitbox (obj_t *obj, uint8 x, uint8 y, uint16 w, uint16 h)
+void obj_set_hitbox (obj_t *obj, fixed x, fixed y, fixed w, fixed h)
 {
-	obj->hitbox.x = ((int16)obj->x) + x;
-	obj->hitbox.y = ((int16)obj->y) + y;
+	obj->hitbox.x = obj->x + x;
+	obj->hitbox.y = obj->y + y;
 	obj->hitbox.w = w;
 	obj->hitbox.h = h;
 
-	obj->hitb_x = x;
-	obj->hitb_y = y;
+	obj->hitbox.offsx = x;
+	obj->hitbox.offsy = y;
 
 	return;
+}
+
+// give center x/y of object
+inline fixed obj_centerx (obj_t *obj)
+{
+	return obj->hitbox.x + obj->hitbox.w / 2;
+}
+
+inline fixed obj_centery (obj_t *obj)
+{
+	return obj->hitbox.y + obj->hitbox.h / 2;
 }
 
 void obj_set_frame (obj_t *obj, uint16 frame)
@@ -108,27 +119,29 @@ void obj_set_rot (obj_t *obj, uint8 rot)
 
 void obj_point (obj_t *obj)
 {
-	if (obj->deltax < 0.0) // looking left
+	static fixed mindel = 2; // minimum delta
+
+	if (obj->deltax < -mindel) // looking left
 	{
-		if (obj->deltay < 0.0) // up-left
+		if (obj->deltay < -mindel) // up-left
 			obj_set_rot (obj, ROT_UPLEFT);
-		else if (obj->deltay > 0.0) // down-left
+		else if (obj->deltay > mindel) // down-left
 			obj_set_rot (obj, ROT_DOWNLEFT);
 		else
 			obj_set_rot (obj, ROT_LEFT);
 	}
-	else if (obj->deltax > 0.0)
+	else if (obj->deltax > mindel)
 	{
-		if (obj->deltay < 0.0) // up-right
+		if (obj->deltay < -mindel) // up-right
 			obj_set_rot (obj, ROT_UPRIGHT);
-		else if (obj->deltay > 0.0) // down-right
+		else if (obj->deltay > mindel) // down-right
 			obj_set_rot (obj, ROT_DOWNRIGHT);
 		else
 			obj_set_rot (obj, ROT_RIGHT);
 	}
-	else if (obj->deltay < 0.0)
+	else if (obj->deltay < -mindel)
 		obj_set_rot (obj, ROT_UP);
-	else
+	else if (obj->deltay > mindel)
 		obj_set_rot (obj, ROT_DOWN);
 
 	return;
@@ -164,9 +177,9 @@ void obj_do_advframes (void) // wrap the above
 static inline void sethitbox (obj_t *obj, uint32 flags)
 {
 	if (flags & SHB_X)
-		obj->hitbox.x = ((int16)obj->x) + obj->hitb_x;
+		obj->hitbox.x = obj->x + obj->hitbox.offsx;
 	if (flags & SHB_Y)
-		obj->hitbox.y = ((int16)obj->y) + obj->hitb_y;
+		obj->hitbox.y = obj->y + obj->hitbox.offsy;
 }
 
 // Set bounding box and hit values
@@ -200,7 +213,7 @@ void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
 	int16 oldx, oldy;
 
 	/* Ignore no-clips */
-	if (obj->flags & OF_NOCLIP)
+	if (42 || obj->flags & OF_NOCLIP)
 	{
 		sethitbox (obj, SHB_X | SHB_Y);
 		return;
@@ -212,17 +225,17 @@ void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
 
 	/* X Axis Correction */
 	// Moving Left, Left collides
-	if (obj->deltax < 0.0 && (hit [0] || hit [2]))
+	if (obj->deltax < 0 && (hit [0] || hit [2]))
 	{
 		obj->hitbox.x -= (obj->hitbox.x % 16) - 16;
-		obj->deltax = 0.0;
+		obj->deltax = 0;
 	}
 
 	// Moving Right, right collides
-	if (obj->deltax > 0.0 && (hit [1] || hit [3]))
+	if (obj->deltax > 0 && (hit [1] || hit [3]))
 	{
 		obj->hitbox.x -= (obj->hitbox.x % 16) + obj->hitbox.w - 16;
-		obj->deltax = 0.0;
+		obj->deltax = 0;
 	}
 
 	sethitbox (obj, SHB_Y);
@@ -231,17 +244,17 @@ void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
 
 	/* Y Axis Correction */
 	// Moving Up, top collides
-	if (obj->deltay < 0.0 && (hit [0] || hit [1]))
+	if (obj->deltay < 0 && (hit [0] || hit [1]))
 	{
 		obj->hitbox.y -= (obj->hitbox.y % 16) - 16;
-		obj->deltay = 0.0;
+		obj->deltay = 0;
 	}
 
 	// Moving Down, bottom collides
-	if (obj->deltay > 0.0 && (hit [2] || hit [3]))
+	if (obj->deltay > 0 && (hit [2] || hit [3]))
 	{
 		obj->hitbox.y -= (obj->hitbox.y % 16) + obj->hitbox.h - 16;
-		obj->deltay = 0.0;
+		obj->deltay = 0;
 	}
 	
 	// Correct position
@@ -249,7 +262,6 @@ void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
 	obj->y += obj->hitbox.y - oldy;
 	return;
 }
-
 
 void obj_do_thinkers (void)
 {

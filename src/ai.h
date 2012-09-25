@@ -26,8 +26,8 @@ typedef struct mapnode_s
 typedef struct
 {
 	obj_t *target;
-	float targx;
-	float targy;
+	fixed targx;
+	fixed targy;
 	mapnode_t *nodelist;
 	uint16 nodeidx;
 	enum

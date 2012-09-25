@@ -48,10 +48,10 @@ mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l)
 			nodelist [i * l->w + j].parent = NULL;
 		}
 
-	opened [iopen++] = &(nodelist [((obj->hitbox.x + obj->hitbox.w / 2) / 16) * l->w + ((obj->hitbox.y + obj->hitbox.h / 2) / 16)]);
+	opened [iopen++] = &(nodelist [(obj_centerx (obj) >> FRAC * 2) * l->w + (obj_centery (obj) >> FRAC * 2)]);
 	opened [iopen - 1]->type = N_OPENED;
 
-	goal = &nodelist [((targ->hitbox.x + targ->hitbox.w / 2) / 16) * l->w + ((targ->hitbox.y + targ->hitbox.h / 2) / 16)];
+	goal = &nodelist [(obj_centerx (targ) >> FRAC * 2) * l->w + (obj_centery (targ) >> FRAC * 2)];
 
 	while (1)
 	{
@@ -160,7 +160,7 @@ extern uint8 editmode;
 void ai_thinker (obj_t *obj)
 {
 	aidata_t *data = obj->data;
-	float distx, disty;
+	fixed distx, disty;
 
 	if (editmode)
 		return;
@@ -168,11 +168,11 @@ void ai_thinker (obj_t *obj)
 	if (data->state == ai_chase)
 	{
 		// init/update node list if we need to
-		if (!data->nodelist || (data->target->hitbox.x + data->target->hitbox.w / 2) / 16 != data->targx
-		||  (data->target->hitbox.y + data->target->hitbox.h / 2) / 16 != data->targy)
+		if (!data->nodelist || obj_centerx (data->target) >> FRAC * 2 != data->targx
+		||  obj_centery (data->target) >> FRAC * 2 != data->targy)
 		{
-			data->targx = (uint8)((data->target->hitbox.x + data->target->hitbox.w / 2) / 16);
-			data->targy = (uint8)((data->target->hitbox.y + data->target->hitbox.h / 2) / 16);
+			data->targx = obj_centerx (data->target) >> FRAC * 2;
+			data->targy = obj_centery (data->target) >> FRAC * 2;
 			data->nodeidx = 1; // exclude first node since we're on it anyway
 	
 			if (data->nodelist)
@@ -183,21 +183,21 @@ void ai_thinker (obj_t *obj)
 				return;
 		}
 	
-		distx = (float)(data->nodelist [data->nodeidx].x * 16 + 8) - (obj->hitbox.x + obj->hitbox.w / 2);
-		disty = (float)(data->nodelist [data->nodeidx].y * 16 + 8) - (obj->hitbox.y + obj->hitbox.h / 2);
-	
+		distx = ((data->nodelist [data->nodeidx].x << FRAC * 2) + (8 << FRAC)) - obj_centerx (obj);
+		disty = ((data->nodelist [data->nodeidx].y << FRAC * 2) + (8 << FRAC)) - obj_centery (obj);
+
 		if (distx || disty)
 		{
-			obj->deltax = distx / fabs (max (fabs (distx), fabs (disty))) / 2.0;
-			obj->deltay = disty / fabs (max (fabs (distx), fabs (disty))) / 2.0;
-	
+			obj->deltax = fixdiv (distx, abs (max (abs (distx), abs (disty)))) / 2;
+			obj->deltay = fixdiv (disty, abs (max (abs (distx), abs (disty)))) / 2;
+
 			obj_point (obj);
 	
-			obj->deltax *= (float)(xrand () % 40) / 20.0;
-			obj->deltay *= (float)(xrand () % 40) / 20.0;
+			obj->deltax = fixmul (obj->deltax, float_to_fixed ((xrand () % 40) / 20.0));
+			obj->deltay = fixmul (obj->deltay, float_to_fixed ((xrand () % 40) / 20.0));
 		}
 	
-		if (fabs (distx) <= 3.0 && fabs (disty) <= 3.0
+		if (abs (distx) <= 3 << FRAC && abs (disty) <= 3 << FRAC
 		&& (data->nodelist [data->nodeidx].x != (uint8)data->targx || data->nodelist [data->nodeidx].y != (uint8)data->targy))
 		{
 			data->nodeidx ++;
@@ -205,13 +205,14 @@ void ai_thinker (obj_t *obj)
 	}
 	else if (data->state == ai_attack)
 	{
-		distx = data->targx - (obj->hitbox.x + obj->hitbox.w / 2);
-		disty = data->targy - (obj->hitbox.y + obj->hitbox.h / 2);
+		fixed thres = float_to_fixed (23.0); // distance required
+		distx = data->targx - obj_centerx (obj);
+		disty = data->targy - obj_centery (obj);
 
 		if (distx || disty)
 		{
-			obj->deltax = distx / 23.0;
-			obj->deltay = disty / 23.0;
+			obj->deltax = fixdiv (distx, thres);
+			obj->deltay = fixdiv (disty, thres);
 
 			obj_point (obj);
 		}
@@ -221,20 +222,20 @@ void ai_thinker (obj_t *obj)
 	}
 
 	// in range of player?
-	if (abs ((data->target->hitbox.x + data->target->hitbox.w / 2) - (obj->hitbox.x + obj->hitbox.w / 2)) < 24
-	&& abs ((data->target->hitbox.y + data->target->hitbox.h / 2) - (obj->hitbox.y + obj->hitbox.h / 2)) < 24
+	if (abs (obj_centerx (data->target) - obj_centerx (obj)) < 24 << FRAC
+	&& abs (obj_centery (data->target) - obj_centery (obj)) < 24 << FRAC
 	&& data->state != ai_attack)
 	{
 		obj_set_frame (obj, slime_anim_attack1);
-		data->targx = data->target->hitbox.x + data->target->hitbox.w / 2;
-		data->targy = data->target->hitbox.y + data->target->hitbox.h / 2;
+		data->targx = obj_centerx (data->target);
+		data->targy = obj_centery (data->target);
 		data->state = ai_attack;
 	}
 
 	obj->x += obj->deltax;
 	obj->y += obj->deltay;
 	obj_collide_tiles (obj, level->tiles, level->w);
-	obj->deltax = obj->deltay = 0.0f;
+	obj->deltax = obj->deltay = 0;
 
 	return;
 }

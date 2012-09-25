@@ -11,10 +11,10 @@ inline fixed float_to_fixed (float a)
 
 inline fixed fixmul (fixed a, fixed b)
 {
-	return (fixed)((uint32) a * b >> FRAC);
+	return (fixed)((int32) a * b >> FRAC);
 }
 
 inline fixed fixdiv (fixed a, fixed b)
 {
-	return (fixed)((uint32) a / b << FRAC);
+	return (fixed)(((int32) a << FRAC) / b);
 }

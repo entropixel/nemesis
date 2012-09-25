@@ -297,8 +297,8 @@ void rndr_do_camera (SDL_Rect *camera, obj_t *follow, int16 w, int16 h)
 	static uint8 xslack = 32, yslack = 20;
 	int16 tmpx, tmpy;
 
-	tmpx = (follow->hitbox.x + follow->hitbox.w / 2) - (camera->x + camera->w / 2);
-	tmpy = (follow->hitbox.y + follow->hitbox.h / 2) - (camera->y + camera->h / 2);
+	tmpx = (obj_centerx (follow) >> FRAC) - (camera->x + camera->w / 2);
+	tmpy = (obj_centery (follow) >> FRAC) - (camera->y + camera->h / 2);
 
 	if (tmpx > xslack)
 		camera->x += tmpx - xslack;
@@ -330,8 +330,8 @@ void rndr_do_objs (SDL_Rect *camera)
 
 	while (it)
 	{
-		it->dest.x = (int16)it->x - camera->x;
-		it->dest.y = (int16)it->y - camera->y;
+		it->dest.x = (it->x >> FRAC) - camera->x;
+		it->dest.y = (it->y >> FRAC) - camera->y;
 
 		if (it->dest.x > -(it->dest.w)
 		 || it->dest.x < camera->w
@@ -493,8 +493,8 @@ void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player)
 
 	SDL_RenderCopy (rndr, titletxt, NULL, &toprct);
 	SDL_RenderCopy (rndr, vertxt, NULL, &botrct);
-	sprintf (xtext, "x: %i", player->hitbox.x);
-	sprintf (ytext, "y: %i", player->hitbox.y);
+	sprintf (xtext, "x: %i.%i", player->hitbox.x >> FRAC, (fixed) ((float)(player->hitbox.x & 0x000f) * (100.0/16.0)));
+	sprintf (ytext, "y: %i.%i", player->hitbox.y >> FRAC, (fixed) ((float)(player->hitbox.y & 0x000f) * (100.0/16.0)));
 	sprintf (mstext, "%ims", frametimes [(curtick % 48) - (curtick % 6)]);
 	rndr_print_text (xtext, 8, 40);
 	rndr_print_text (ytext, 8, 56);
@@ -505,7 +505,7 @@ void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player)
 	SDL_SetRenderDrawColor (rndr, 255, 0, 0, 255);
 	while (it)
 	{
-		SDL_Rect tmphb = it->hitbox;
+		SDL_Rect tmphb = { it->hitbox.x >> FRAC, it->hitbox.y >> FRAC, it->hitbox.w >> FRAC, it->hitbox.h >> FRAC };
 		tmphb.x -= camera->x;
 		tmphb.y -= camera->y;
 		SDL_RenderFillRect (rndr, &tmphb);
