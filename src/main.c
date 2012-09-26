@@ -57,14 +57,23 @@ void update_tiles (void)
 			// set to solid if this isn't a floor
 			if ((level->offs [i * level->w + j] >= dun_wall_n && level->offs [i * level->w + j] <= dun_wall_osw + 5)
 			|| level->offs [i * level->w + j] == dun_black)
+			{
 				level->tiles [i * level->w + j].flags |= TF_SOLID;
+				level->tiles [i * level->w + j].hitbox.x = i << FRAC * 2;
+				level->tiles [i * level->w + j].hitbox.y = j << FRAC * 2;
+				level->tiles [i * level->w + j].hitbox.w = level->tiles [i * level->w + j].hitbox.h = 16 << FRAC;
+			}
 			else if (level->offs [i * level->w + j] >= dun_stair_n && level->offs [i * level->w + j] <= dun_stair_w + 3)
 			{
 				level->tiles [i * level->w + j].flags |= TF_STAIR;
 				level->tiles [i * level->w + j].flags &= ~TF_SOLID;
+				level->tiles [i * level->w + j].hitbox.w = level->tiles [i * level->w + j].hitbox.h = 0;
 			}
 			else
+			{
 				level->tiles [i * level->w + j].flags &= ~(TF_SOLID | TF_STAIR);
+				level->tiles [i * level->w + j].hitbox.w = level->tiles [i * level->w + j].hitbox.h = 0;
+			}
 
 			tilesrc.x = level->tiles [i * level->w + j].offs.x * 16;
 			tilesrc.y = level->tiles [i * level->w + j].offs.y * 16;
@@ -136,7 +145,7 @@ int main (int argc, char **argv)
 		rndr_nif_shift (slimespr, 0, xrand () % 256, xrand () % 256, ((int16)(xrand () % 128)) - 64);
 		slime = obj_create (24 + (i % 8) * 20, 16, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, ai_thinker, NULL);
 		obj_set_hitbox (slime, 4 << FRAC, 8 << FRAC, 8 << FRAC, 8 << FRAC);
-		slime->flags |= OF_NOCLIP;
+
 		slime->data = malloc (sizeof (aidata_t));
 		if (!slime->data)
 			obj_destroy (slime);

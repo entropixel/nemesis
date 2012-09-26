@@ -16,6 +16,8 @@ extern level_t *level;
 
 void player_thinker (obj_t *obj)
 {
+	obj_t *it = obj_list_head;
+
 	if (keymask & (UPK | RIGHTK | DOWNK | LEFTK) && !(keymask & ATK) && obj->frame < char_anim_punch1)
 	{
 		if (obj->frame == char_anim_idle1 || obj->frame == char_anim_idle2)
@@ -64,9 +66,20 @@ void player_thinker (obj_t *obj)
 			break;
 		}
 
+		obj_collide_tiles (obj, level->tiles, level->w);
+
+		while (it)
+		{
+			if (it->hitbox.w && it->hitbox.h && it != obj)
+				obj_collide_hitbox (obj, &(it->hitbox));
+
+			it = it->next;
+		}
+
 		obj->x += obj->deltax;
 		obj->y += obj->deltay;
-		obj_collide_tiles (obj, level->tiles, level->w);
+		obj->hitbox.x = obj->x + obj->hitbox.offsx;
+		obj->hitbox.y = obj->y + obj->hitbox.offsy;
 		obj->deltax = obj->deltay = 0;
 
 	}

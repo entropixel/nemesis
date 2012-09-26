@@ -171,96 +171,79 @@ void obj_do_advframes (void) // wrap the above
 	return;
 }
 
-#define SHB_X 1
-#define SHB_Y 2
-
-static inline void sethitbox (obj_t *obj, uint32 flags)
+uint8 obj_collide_hitbox (obj_t *obj, hitbox_t *testbox)
 {
-	if (flags & SHB_X)
-		obj->hitbox.x = obj->x + obj->hitbox.offsx;
-	if (flags & SHB_Y)
-		obj->hitbox.y = obj->y + obj->hitbox.offsy;
+	int32 a;
+	uint8 ret = 0;
+	fixed *delta;
+	fixed omina, omaxa, tmina, tmaxa;
+	fixed ominb, omaxb, tminb, tmaxb;
+
+	if (obj->flags & OF_NOCLIP)
+		return 0;
+
+	for (a = 0; a < 2; a++)
+	{
+		// 'a' is current axis, 'b' is opposite
+		if (!a) // Y Axis
+		{
+			if (obj->hitbox.y + obj->deltay > testbox->y + testbox->h
+			||  obj->hitbox.y + obj->hitbox.h + obj->deltay < testbox->y) // not touching
+				continue;
+
+			tmina = testbox->y;
+			tmaxa = tmina + testbox->h;
+			omina = obj->hitbox.y;
+			omaxa = omina + obj->hitbox.h - 1;
+			tminb = testbox->x;
+			tmaxb = tminb + testbox->w;
+			ominb = obj->hitbox.x;
+			omaxb = ominb + obj->hitbox.w - 1;
+			delta = &obj->deltay;
+		}
+		else // X axis
+		{
+			if (obj->hitbox.x + obj->deltax > testbox->x + testbox->w
+			||  obj->hitbox.x + obj->hitbox.w + obj->deltax < testbox->x) // not touching
+				continue;
+
+			tmina = testbox->x;
+			tmaxa = tmina + testbox->w;
+			omina = obj->hitbox.x;
+			omaxa = omina + obj->hitbox.w - 1;
+			tminb = testbox->y;
+			tmaxb = tminb + testbox->h;
+			ominb = obj->hitbox.y;
+			omaxb = ominb + obj->hitbox.h - 1;
+			delta = &obj->deltax;
+		}
+
+		// test for actual intersection
+		if ((ominb > tminb && ominb < tmaxb) || (omaxb > tminb && omaxb < tmaxb))
+		{
+			// Which side are we going into?
+			if (*delta < 0 && omina + *delta <= tmaxa) // left/up
+				*delta += tmaxa - (omina + *delta);
+
+			if (*delta > 0 && omaxa + *delta >= tmina) // right/down
+				*delta -= (omaxa + *delta) - tmina;
+		}
+	}
+
+	return ret;
 }
 
-// Set bounding box and hit values
-static inline void obj_set_bb (obj_t *obj, int32 *boxcoord, uint8 *hit, struct tile_t *tiles, uint16 width)
+uint8 obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint8 w)
 {
-	int32 i;
-	/* Determine box coords */
-	// X-Axis
-	boxcoord [0] = boxcoord [4] = obj->hitbox.x / 16;
-	boxcoord [2] = boxcoord [6] = (obj->hitbox.x + obj->hitbox.w - 1) / 16;
-	
-	// Y Axis
-	boxcoord [1] = boxcoord [3] = obj->hitbox.y / 16;
-	boxcoord [5] = boxcoord [7] = (obj->hitbox.y + obj->hitbox.h - 1) / 16;
-	
-	/* Determine corner collision */
-	for (i = 0; i < 4; i++)
-		hit [i] = tiles [(boxcoord [i * 2] * width) + boxcoord [i * 2 + 1]].flags & TF_SOLID;
+	uint8 i, j;
+	uint32 ret;
 
-	return;
-}
+	for (i = (obj_centerx (obj) >> FRAC * 2) - 1; i <= (obj_centerx (obj) >> FRAC * 2) + 1; i++)
+		for (j = (obj_centery (obj) >> FRAC * 2) - 1; j <= (obj_centery (obj) >> FRAC * 2) + 1; j++)
+			if (tiles [i * w + j].hitbox.w && tiles [i * w + j].hitbox.h)
+				ret += obj_collide_hitbox (obj, (hitbox_t*)&(tiles [i * w + j].hitbox));
 
-void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width)
-{
-	// (0)----(1)
-	//  |      |  [x, y]
-	//  |      | boxcoord = you
-	// (2)----(3)
-	int32 boxcoord [4] [2];
-	uint8 hit [4];
-	int16 oldx, oldy;
-
-	/* Ignore no-clips */
-	if (42 || obj->flags & OF_NOCLIP)
-	{
-		sethitbox (obj, SHB_X | SHB_Y);
-		return;
-	}
-
-	sethitbox (obj, SHB_X);
-	obj_set_bb (obj, *boxcoord, hit, tiles, width);
-	oldx = obj->hitbox.x;
-
-	/* X Axis Correction */
-	// Moving Left, Left collides
-	if (obj->deltax < 0 && (hit [0] || hit [2]))
-	{
-		obj->hitbox.x -= (obj->hitbox.x % 16) - 16;
-		obj->deltax = 0;
-	}
-
-	// Moving Right, right collides
-	if (obj->deltax > 0 && (hit [1] || hit [3]))
-	{
-		obj->hitbox.x -= (obj->hitbox.x % 16) + obj->hitbox.w - 16;
-		obj->deltax = 0;
-	}
-
-	sethitbox (obj, SHB_Y);
-	obj_set_bb (obj, *boxcoord, hit, tiles, width);
-	oldy = obj->hitbox.y;
-
-	/* Y Axis Correction */
-	// Moving Up, top collides
-	if (obj->deltay < 0 && (hit [0] || hit [1]))
-	{
-		obj->hitbox.y -= (obj->hitbox.y % 16) - 16;
-		obj->deltay = 0;
-	}
-
-	// Moving Down, bottom collides
-	if (obj->deltay > 0 && (hit [2] || hit [3]))
-	{
-		obj->hitbox.y -= (obj->hitbox.y % 16) + obj->hitbox.h - 16;
-		obj->deltay = 0;
-	}
-	
-	// Correct position
-	obj->x += obj->hitbox.x - oldx;
-	obj->y += obj->hitbox.y - oldy;
-	return;
+	return !!ret;
 }
 
 void obj_do_thinkers (void)

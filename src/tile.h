@@ -16,6 +16,15 @@ typedef struct tile_t
 	SDL_Texture *sheet;
 	tileoffs_t offs;
 	uint8 level;
+	struct
+	{
+		fixed x;
+		fixed y;
+		fixed w;
+		fixed h;
+		fixed offsx;
+		fixed offsy;
+	} hitbox;
 	uint16 flags;
 } tile_t;
 

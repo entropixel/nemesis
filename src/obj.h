@@ -62,7 +62,8 @@ void obj_set_rot (obj_t *obj, uint8 rot);
 void obj_point (obj_t *obj);
 void obj_adv_frame (obj_t *obj);
 void obj_do_advframes (void);
-void obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint16 width);
+uint8 obj_collide_hitbox (obj_t *obj, hitbox_t *testbox);
+uint8 obj_collide_tiles (obj_t *obj, struct tile_t *tiles, uint8 w);
 void obj_do_thinkers (void);
 
 extern obj_t *obj_list_head, *obj_list_tail;

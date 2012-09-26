@@ -232,9 +232,13 @@ void ai_thinker (obj_t *obj)
 		data->state = ai_attack;
 	}
 
+	obj_collide_tiles (obj, level->tiles, level->w);
+	obj_collide_hitbox (obj, &data->target->hitbox);
+
 	obj->x += obj->deltax;
 	obj->y += obj->deltay;
-	obj_collide_tiles (obj, level->tiles, level->w);
+	obj->hitbox.x = obj->x + obj->hitbox.offsx;
+	obj->hitbox.y = obj->y + obj->hitbox.offsy;
 	obj->deltax = obj->deltay = 0;
 
 	return;
