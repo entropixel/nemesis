@@ -133,17 +133,17 @@ int main (int argc, char **argv)
 	rndr_nif_reset (hudfillspr);
 	rndr_nif_shift (hudfillspr, 0, 143, 255, 0);
 	mfill = SDL_CreateTextureFromSurface (rndr, hudfillspr->sur);
-	player = obj_create (64, 128, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker, NULL);
+	player = obj_create (64 << FRAC, 128 << FRAC, SDL_CreateTextureFromSurface (rndr, plsprite->sur), &char_anim, char_anim_idle1, ROT_DOWNRIGHT, player_thinker, NULL);
 	obj_set_hitbox (player, 8 << FRAC, 16 << FRAC, 16 << FRAC, 16 << FRAC);
 
 	int i;
 
-	for (i = 0; i < 1; i++)
+	for (i = 0; i < 4; i++)
 	{
 		obj_t *slime;
 		rndr_nif_reset (slimespr);
 		rndr_nif_shift (slimespr, 0, xrand () % 256, xrand () % 256, ((int16)(xrand () % 128)) - 64);
-		slime = obj_create (24 + (i % 8) * 20, 16, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, ai_thinker, NULL);
+		slime = obj_create (24 + (i % 8) * 20 << FRAC, 16 << FRAC, SDL_CreateTextureFromSurface (rndr, slimespr->sur), &slime_anim, 0, ROT_DOWNRIGHT, ai_thinker, NULL);
 		obj_set_hitbox (slime, 4 << FRAC, 8 << FRAC, 8 << FRAC, 8 << FRAC);
 
 		slime->data = malloc (sizeof (aidata_t));

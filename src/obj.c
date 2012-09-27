@@ -176,7 +176,7 @@ uint8 obj_collide_hitbox (obj_t *obj, hitbox_t *testbox)
 	int32 a;
 	uint8 ret = 0;
 	fixed *delta;
-	fixed omina, omaxa, tmina, tmaxa;
+	fixed *omina, omaxa, tmina, tmaxa;
 	fixed ominb, omaxb, tminb, tmaxb;
 
 	if (obj->flags & OF_NOCLIP)
@@ -193,8 +193,8 @@ uint8 obj_collide_hitbox (obj_t *obj, hitbox_t *testbox)
 
 			tmina = testbox->y;
 			tmaxa = tmina + testbox->h;
-			omina = obj->hitbox.y;
-			omaxa = omina + obj->hitbox.h - 1;
+			omina = &obj->hitbox.y;
+			omaxa = *omina + obj->hitbox.h - 1;
 			tminb = testbox->x;
 			tmaxb = tminb + testbox->w;
 			ominb = obj->hitbox.x;
@@ -209,8 +209,8 @@ uint8 obj_collide_hitbox (obj_t *obj, hitbox_t *testbox)
 
 			tmina = testbox->x;
 			tmaxa = tmina + testbox->w;
-			omina = obj->hitbox.x;
-			omaxa = omina + obj->hitbox.w - 1;
+			omina = &obj->hitbox.x;
+			omaxa = *omina + obj->hitbox.w - 1;
 			tminb = testbox->y;
 			tmaxb = tminb + testbox->h;
 			ominb = obj->hitbox.y;
@@ -219,14 +219,20 @@ uint8 obj_collide_hitbox (obj_t *obj, hitbox_t *testbox)
 		}
 
 		// test for actual intersection
-		if ((ominb > tminb && ominb < tmaxb) || (omaxb > tminb && omaxb < tmaxb))
+		if ((ominb > tminb && ominb < tmaxb) || (omaxb > tminb && omaxb < tmaxb) || (tminb > ominb && tmaxb < omaxb))
 		{
 			// Which side are we going into?
-			if (*delta < 0 && omina + *delta <= tmaxa) // left/up
-				*delta += tmaxa - (omina + *delta);
-
-			if (*delta > 0 && omaxa + *delta >= tmina) // right/down
-				*delta -= (omaxa + *delta) - tmina;
+			if (*delta < 0 && *omina + *delta <= tmaxa) // left/up
+			{
+				*delta = 0;
+				*omina = tmaxa;
+			}
+			else if (*delta > 0 && omaxa + *delta >= tmina) // right/down
+			{
+				*delta = 0;
+				*omina = tmina - (1 + omaxa - *omina);
+			}
+			ret = 1;
 		}
 	}
 

@@ -76,10 +76,10 @@ void player_thinker (obj_t *obj)
 			it = it->next;
 		}
 
-		obj->x += obj->deltax;
-		obj->y += obj->deltay;
-		obj->hitbox.x = obj->x + obj->hitbox.offsx;
-		obj->hitbox.y = obj->y + obj->hitbox.offsy;
+		obj->hitbox.x += obj->deltax;
+		obj->hitbox.y += obj->deltay;
+		obj->x = obj->hitbox.x - obj->hitbox.offsx;
+		obj->y = obj->hitbox.y - obj->hitbox.offsy;
 		obj->deltax = obj->deltay = 0;
 
 	}
