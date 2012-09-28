@@ -154,9 +154,43 @@ mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l)
 	return NULL;
 }
 
+// return true if there is an unblocked line between a and b
 extern level_t *level;
-extern uint8 editmode;
+uint8 ai_sight (obj_t *a, obj_t *b)
+{
+	static uint8 maxsteps = 160, prec = 5;
+	fixed totalsteps = 0;
+	fixed stepx, stepy;
+	fixed startx = obj_centerx (a), starty = obj_centery (a);
+	fixed endx = obj_centerx (b), endy = obj_centery (b);
+
+	stepx = endx - startx;
+	stepy = endy - starty;
+
+	stepx >>= prec;
+	stepy >>= prec;
+
+	while (((stepx < 0 && startx > endx) || (stepx > 0 && startx < endx))
+	   || ((stepy < 0 && starty > endy) || (stepy > 0 && starty < endy)))
+	{
+		if (level->tiles [(startx >> FRAC * 2) * level->w + (starty >> FRAC * 2)].flags & TF_SOLID || totalsteps >= maxsteps)
+			return 0; // blocked
+
+		if ((stepx < 0 && startx >= endx) || (stepx > 0 && startx <= endx))
+			startx += stepx;
+
+		if ((stepy < 0 && starty >= endy) || (stepy > 0 && starty <= endy))
+			starty += stepy;
+
+		totalsteps ++;
+	}
+
+	return 1;
+}
+
 #define max(a,b) ((a > b) ? a : b)
+extern uint8 editmode;
+extern uint32 curtick;
 void ai_thinker (obj_t *obj)
 {
 	aidata_t *data = obj->data;
@@ -165,20 +199,47 @@ void ai_thinker (obj_t *obj)
 	if (editmode)
 		return;
 
+	// choose state
+	if (abs (obj_centerx (data->target) - obj_centerx (obj)) < 24 << FRAC
+	&& abs (obj_centery (data->target) - obj_centery (obj)) < 24 << FRAC
+	&& data->state != ai_attack)
+	{
+		obj_set_frame (obj, slime_anim_attack1);
+		data->targx = obj_centerx (data->target);
+		data->targy = obj_centery (data->target);
+		data->state = ai_attack;
+	}
+	else if (data->state != ai_chase && data->state != ai_attack && ai_sight (obj, data->target))
+	{
+		data->nodelist = ai_get_path (obj, data->target, level);
+		data->nodeidx = 1;
+		data->state = ai_chase;
+	}
+	else if (data->state != ai_wander && data->state != ai_attack && !data->nodelist)
+	{
+		data->targx = (obj_centerx (obj) >> FRAC * 2) + (xrand () % 2) - 1;
+		data->targy = (obj_centery (obj) >> FRAC * 2) + (xrand () % 2) - 1;
+		data->state = ai_wander;
+	}
+
 	if (data->state == ai_chase)
 	{
 		// init/update node list if we need to
-		if (!data->nodelist || obj_centerx (data->target) >> FRAC * 2 != data->targx
-		||  obj_centery (data->target) >> FRAC * 2 != data->targy)
+		if ((!data->nodelist || obj_centerx (data->target) >> FRAC * 2 != data->targx
+		||  obj_centery (data->target) >> FRAC * 2 != data->targy) && ai_sight (obj, data->target))
 		{
 			data->targx = obj_centerx (data->target) >> FRAC * 2;
 			data->targy = obj_centery (data->target) >> FRAC * 2;
 			data->nodeidx = 1; // exclude first node since we're on it anyway
 	
 			if (data->nodelist)
+			{
 				free (data->nodelist);
-	
+				data->nodelist = NULL;
+			}
+
 			data->nodelist = ai_get_path (obj, data->target, level);
+
 			if (!data->nodelist)
 				return;
 		}
@@ -197,10 +258,15 @@ void ai_thinker (obj_t *obj)
 			obj->deltay = fixmul (obj->deltay, float_to_fixed ((xrand () % 40) / 20.0));
 		}
 	
-		if (abs (distx) <= 3 << FRAC && abs (disty) <= 3 << FRAC
-		&& (data->nodelist [data->nodeidx].x != (uint8)data->targx || data->nodelist [data->nodeidx].y != (uint8)data->targy))
+		if (abs (distx) <= 3 << FRAC && abs (disty) <= 3 << FRAC)
 		{
-			data->nodeidx ++;
+			if (data->nodelist [data->nodeidx].x != (uint8)data->targx || data->nodelist [data->nodeidx].y != (uint8)data->targy)
+				data->nodeidx ++;
+			else
+			{
+				free (data->nodelist);
+				data->nodelist = NULL;
+			}
 		}
 	}
 	else if (data->state == ai_attack)
@@ -218,18 +284,34 @@ void ai_thinker (obj_t *obj)
 		}
 
 		if (obj->frame == slime_anim_crawl1) // attack over
-			data->state = ai_chase;
+		{
+			free (data->nodelist);
+			data->nodelist = NULL;
+			data->state = ai_null;
+		}
 	}
-
-	// in range of player?
-	if (abs (obj_centerx (data->target) - obj_centerx (obj)) < 24 << FRAC
-	&& abs (obj_centery (data->target) - obj_centery (obj)) < 24 << FRAC
-	&& data->state != ai_attack)
+	else if (data->state == ai_wander)
 	{
-		obj_set_frame (obj, slime_anim_attack1);
-		data->targx = obj_centerx (data->target);
-		data->targy = obj_centery (data->target);
-		data->state = ai_attack;
+		distx = ((data->targx << FRAC * 2) + (8 << FRAC)) - obj_centerx (obj);
+		disty = ((data->targy << FRAC * 2) + (8 << FRAC)) - obj_centery (obj);
+
+		if (distx || disty)
+		{
+			obj->deltax = fixdiv (distx, abs (max (abs (distx), abs (disty)))) / 2;
+			obj->deltay = fixdiv (disty, abs (max (abs (distx), abs (disty)))) / 2;
+
+			obj_point (obj);
+	
+			obj->deltax = fixmul (obj->deltax, float_to_fixed ((xrand () % 40) / 20.0));
+			obj->deltay = fixmul (obj->deltay, float_to_fixed ((xrand () % 40) / 20.0));
+		}
+
+		if ((abs (distx) <= 3 << FRAC && abs (disty) <= 3 << FRAC)
+		|| !(curtick % 80))
+		{
+			data->targx = (obj_centerx (obj) >> FRAC * 2) + ((xrand () % 2) ? 1 : -1);
+			data->targy = (obj_centery (obj) >> FRAC * 2) + ((xrand () % 2) ? 1 : -1);
+		}
 	}
 
 	obj_collide_tiles (obj, level->tiles, level->w);

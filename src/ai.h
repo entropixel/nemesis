@@ -32,6 +32,7 @@ typedef struct
 	uint16 nodeidx;
 	enum
 	{
+		ai_null,
 		ai_wander,
 		ai_chase,
 		ai_attack
