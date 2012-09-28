@@ -307,7 +307,7 @@ void ai_thinker (obj_t *obj)
 		}
 
 		if ((abs (distx) <= 3 << FRAC && abs (disty) <= 3 << FRAC)
-		|| !(curtick % 80))
+		|| !(curtick % (120 + xrand () % 60)))
 		{
 			data->targx = (obj_centerx (obj) >> FRAC * 2) + ((xrand () % 2) ? 1 : -1);
 			data->targy = (obj_centery (obj) >> FRAC * 2) + ((xrand () % 2) ? 1 : -1);

@@ -54,9 +54,9 @@ void update_tiles (void)
 			level->tiles [i * level->w + j].sheet = tiletex;
 			level->tiles [i * level->w + j].offs = dungeon_tileoffs [level->offs [i * level->w + j]];
 
-			// set to solid if this isn't a floor
+			// set to solid if this isn't a floor or if this is a border tile
 			if ((level->offs [i * level->w + j] >= dun_wall_n && level->offs [i * level->w + j] <= dun_wall_osw + 5)
-			|| level->offs [i * level->w + j] == dun_black)
+			|| level->offs [i * level->w + j] == dun_black || i == 0 || i == level->w - 1 || j == 0 || j == level->h - 1)
 			{
 				level->tiles [i * level->w + j].flags |= TF_SOLID;
 				level->tiles [i * level->w + j].hitbox.x = i << FRAC * 2;
@@ -138,7 +138,7 @@ int main (int argc, char **argv)
 
 	int i;
 
-	for (i = 0; i < 4; i++)
+	for (i = 0; i < 32; i++)
 	{
 		obj_t *slime;
 		rndr_nif_reset (slimespr);
