@@ -173,11 +173,12 @@ void obj_do_advframes (void) // wrap the above
 
 uint8 obj_collide_hitbox (obj_t *obj, hitbox_t *testbox)
 {
+	static fixed fudge = 24;
 	int32 a;
 	uint8 ret = 0;
 	fixed *delta;
 	fixed *omina, omaxa, tmina, tmaxa;
-	fixed ominb, omaxb, tminb, tmaxb;
+	fixed *ominb, omaxb, tminb, tmaxb;
 
 	if (obj->flags & OF_NOCLIP)
 		return 0;
@@ -197,8 +198,8 @@ uint8 obj_collide_hitbox (obj_t *obj, hitbox_t *testbox)
 			omaxa = *omina + obj->hitbox.h - 1;
 			tminb = testbox->x;
 			tmaxb = tminb + testbox->w;
-			ominb = obj->hitbox.x;
-			omaxb = ominb + obj->hitbox.w - 1;
+			ominb = &obj->hitbox.x;
+			omaxb = *ominb + obj->hitbox.w - 1;
 			delta = &obj->deltay;
 		}
 		else // X axis
@@ -213,24 +214,41 @@ uint8 obj_collide_hitbox (obj_t *obj, hitbox_t *testbox)
 			omaxa = *omina + obj->hitbox.w - 1;
 			tminb = testbox->y;
 			tmaxb = tminb + testbox->h;
-			ominb = obj->hitbox.y;
-			omaxb = ominb + obj->hitbox.h - 1;
+			ominb = &obj->hitbox.y;
+			omaxb = *ominb + obj->hitbox.h - 1;
 			delta = &obj->deltax;
 		}
 
 		// test for actual intersection
-		if ((ominb > tminb && ominb < tmaxb) || (omaxb > tminb && omaxb < tmaxb) || (tminb > ominb && tmaxb < omaxb))
+		if ((*ominb > tminb && *ominb < tmaxb) || (omaxb > tminb && omaxb < tmaxb) || (tminb > *ominb && tmaxb < omaxb))
 		{
+			fixed cost;
+
+			// fudge this a bit
+			if (abs (*ominb - tmaxb) < fudge || abs (omaxb - tminb) < fudge)
+				continue;
+
 			// Which side are we going into?
 			if (*delta < 0 && *omina + *delta <= tmaxa) // left/up
 			{
-				*delta = 0;
-				*omina = tmaxa;
+				cost = abs (tmaxa - *omina);
+
+				// Only correct if this is the cheapest way out
+				if (cost <= abs (omaxb - tminb) && cost <= abs (*ominb - tmaxb))
+				{
+					*delta = 0;
+					*omina = tmaxa;
+				}
 			}
 			else if (*delta > 0 && omaxa + *delta >= tmina) // right/down
 			{
-				*delta = 0;
-				*omina = tmina - (1 + omaxa - *omina);
+				cost = abs (tmina - omaxa);
+
+				if (cost <= abs (omaxb - tminb) && cost <= abs (*ominb - tmaxb))
+				{
+					*delta = 0;
+					*omina = tmina - (1 + omaxa - *omina);
+				}
 			}
 			ret = 1;
 		}
