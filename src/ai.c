@@ -20,7 +20,7 @@
 extern SDL_Renderer *rndr;
 
 uint8 iopen = 0, iclose = 0;
-mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l)
+mapnode_t *ai_get_astar (obj_t *obj, obj_t *targ, level_t *l, uint32 *numnodes)
 {
 	mapnode_t *ret = NULL; // the path we return
 	mapnode_t nodelist [l->w * l->h];
@@ -28,6 +28,7 @@ mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l)
 	mapnode_t *goal;
 
 	iopen = iclose = 0;
+	*numnodes = 0;
 
 	int32 i, j;
 
@@ -82,22 +83,23 @@ mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l)
 		if (current == goal)
 		{
 			mapnode_t *it = current;
-			uint16 numnodes = 0;
+			uint32 tnumnodes = 0;
 
 			while (it)
 			{
-				numnodes ++;
+				tnumnodes ++;
 				it = it->parent;
 			}
 
-			ret = malloc (numnodes * sizeof (mapnode_t));
+			*numnodes = tnumnodes;
+			ret = malloc (tnumnodes * sizeof (mapnode_t));
 
 			if (!ret)
 				break;
 
 			while (current)
 			{
-				memcpy (&(ret [--numnodes]), current, sizeof (mapnode_t));
+				memcpy (&(ret [--tnumnodes]), current, sizeof (mapnode_t));
 				current = current->parent;
 			}
 
@@ -154,6 +156,71 @@ mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l)
 	return NULL;
 }
 
+// get random path with no goal, in hopes that we see the player
+// will return up to 'numnodes' nodes.
+mapnode_t *ai_get_drunkwalk (obj_t *obj, level_t *l, uint32_t *numnodes)
+{
+	mapnode_t *ret = malloc (*numnodes * sizeof (mapnode_t)); // the path we return
+	mapnode_t nodelist [l->w * l->h];
+	mapnode_t *current;
+
+	if (!ret)
+		return NULL;
+
+	int32 i = 0, j = 0, k = 0;
+
+	// populate nodelist
+	for (i = 0; i < l->w; i++)
+		for (j = 0; j < l->h; j++)
+		{
+			if (l->tiles [i * l->w + j].flags & TF_SOLID)
+				nodelist [i * l->w + j].type = N_BLOCKED;
+			else
+				nodelist [i * l->w + j].type = N_UNSET;
+
+			nodelist [i * l->w + j].x = i;
+			nodelist [i * l->w + j].y = j;
+
+			nodelist [i * l->w + j].g = nodelist [i * l->w + j].h = 0;
+			nodelist [i * l->w + j].parent = NULL;
+		}
+
+	current = &(nodelist [(obj_centerx (obj) >> FRAC * 2) * l->w + (obj_centery (obj) >> FRAC * 2)]);
+	memcpy (ret, current, sizeof (mapnode_t));
+	current->type = N_CLOSED;
+
+	for (i = 1; i < *numnodes; i++)
+	{
+		// build list of open nodes around us
+		int32 numdirs = 0;
+		mapnode_t *opened [8];
+
+		for (j = current->x - 1; j <= current->x + 1; j++)
+			for (k = current->y - 1; k <= current->y + 1; k++)
+			{
+				if (j < 0 || j > l->w - 1 || k < 0 || k > l->h - 1)
+					continue;
+
+				if (nodelist [j * l->w + current->y].type == N_BLOCKED || nodelist [current->x * l->w + k].type == N_BLOCKED)
+					continue;
+
+				if (nodelist [j * l->w + k].type == N_UNSET)
+					opened [numdirs++] = &(nodelist [j * l->w + k]);
+			}
+
+		if (numdirs)
+			current = opened [xrand () % numdirs];
+		else // blocked D:
+			break;
+
+		memcpy (&(ret [i]), current, sizeof (mapnode_t));
+		current->type = N_CLOSED;
+	}
+
+	*numnodes = i;
+	return ret;
+}
+
 // return true if there is an unblocked line between a and b
 extern level_t *level;
 uint8 ai_sight (obj_t *a, obj_t *b)
@@ -191,128 +258,152 @@ uint8 ai_sight (obj_t *a, obj_t *b)
 #define max(a,b) ((a > b) ? a : b)
 extern uint8 editmode;
 extern uint32 curtick;
+
+void ai_follow_path (obj_t *obj, aidata_t *data)
+{
+	fixed distx = ((data->nodelist [data->nodeidx].x << FRAC * 2) + (8 << FRAC)) - obj_centerx (obj);
+	fixed disty = ((data->nodelist [data->nodeidx].y << FRAC * 2) + (8 << FRAC)) - obj_centery (obj);
+
+	if (distx || disty)
+	{
+		obj->deltax = fixdiv (distx, abs (max (abs (distx), abs (disty)))) / data->divspeed;
+		obj->deltay = fixdiv (disty, abs (max (abs (distx), abs (disty)))) / data->divspeed;
+
+		obj_point (obj);
+
+		obj->deltax = fixmul (obj->deltax, float_to_fixed ((xrand () % 40) / 20.0));
+		obj->deltay = fixmul (obj->deltay, float_to_fixed ((xrand () % 40) / 20.0));
+	}
+
+	if (abs (distx) <= 3 << FRAC && abs (disty) <= 3 << FRAC)
+	{
+		if (data->nodelist [data->nodeidx].x != (uint8)data->targx || data->nodelist [data->nodeidx].y != (uint8)data->targy)
+			data->nodeidx ++;
+		else
+		{
+			free (data->nodelist);
+			data->nodelist = NULL;
+		}
+	}
+}
+
+void ai_attack (obj_t *obj, aidata_t *data)
+{
+	fixed thres = float_to_fixed (23.0); // distance required
+	fixed distx = data->targx - obj_centerx (obj);
+	fixed disty = data->targy - obj_centery (obj);
+
+	if (distx || disty)
+	{
+		obj->deltax = fixdiv (distx, thres);
+		obj->deltay = fixdiv (disty, thres);
+
+		obj_point (obj);
+	}
+
+	if (obj->frame == slime_anim_crawl1) // attack over
+	{
+		free (data->nodelist);
+		data->nodelist = NULL;
+		data->thinker = NULL;
+	}
+
+	return;
+}
+
+void ai_chase (obj_t *obj, aidata_t *data)
+{
+	// init/update node list if we need to
+	if ((!data->nodelist || obj_centerx (data->target) >> FRAC * 2 != data->targx
+	||  obj_centery (data->target) >> FRAC * 2 != data->targy) && ai_sight (obj, data->target))
+	{
+		uint32 numnodes;
+
+		data->targx = obj_centerx (data->target) >> FRAC * 2;
+		data->targy = obj_centery (data->target) >> FRAC * 2;
+		data->nodeidx = 1; // exclude first node since we're on it anyway
+
+		if (data->nodelist)
+		{
+			free (data->nodelist);
+			data->nodelist = NULL;
+		}
+
+		data->nodelist = ai_get_astar (obj, data->target, level, &numnodes);
+
+		if (numnodes < 2)
+		{
+			free (data->nodelist);
+			data->nodelist = NULL;
+		}
+
+		if (!data->nodelist)
+			return;
+	}
+
+	ai_follow_path (obj, data);
+	return;
+}
+
+void ai_wander (obj_t *obj, aidata_t *data)
+{
+	// init/update node list if we need to
+	if (!data->nodelist)
+	{
+		uint32 numnodes = 16;
+
+		data->nodeidx = 1; // exclude first node since we're on it anyway
+
+		data->nodelist = ai_get_drunkwalk (obj, level, &numnodes);
+
+		data->targx = data->nodelist [numnodes - 1].x;
+		data->targy = data->nodelist [numnodes - 1].y;
+
+		if (numnodes < 2)
+		{
+			free (data->nodelist);
+			data->nodelist = NULL;
+		}
+
+		if (!data->nodelist)
+			return;
+	}
+
+	ai_follow_path (obj, data);
+	return;
+}
+
 void ai_thinker (obj_t *obj)
 {
 	aidata_t *data = obj->data;
-	fixed distx, disty;
 
 	if (editmode)
 		return;
 
-	// choose state
+	// run another function as the thinker, based on current state
 	if (abs (obj_centerx (data->target) - obj_centerx (obj)) < 24 << FRAC
 	&& abs (obj_centery (data->target) - obj_centery (obj)) < 24 << FRAC
-	&& data->state != ai_attack)
+	&& data->thinker != ai_attack)
 	{
 		obj_set_frame (obj, slime_anim_attack1);
 		data->targx = obj_centerx (data->target);
 		data->targy = obj_centery (data->target);
-		data->state = ai_attack;
+		data->thinker = ai_attack;
 	}
-	else if (data->state != ai_chase && data->state != ai_attack && ai_sight (obj, data->target))
+	else if (data->thinker != ai_chase && data->thinker != ai_attack && ai_sight (obj, data->target))
 	{
-		data->nodelist = ai_get_path (obj, data->target, level);
-		data->nodeidx = 1;
-		data->state = ai_chase;
+		data->nodelist = NULL;
+		data->thinker = ai_chase;
+		data->divspeed = 2;
 	}
-	else if (data->state != ai_wander && data->state != ai_attack && !data->nodelist)
+	else if (data->thinker != ai_wander && data->thinker != ai_attack && !data->nodelist)
 	{
-		data->targx = (obj_centerx (obj) >> FRAC * 2) + (xrand () % 2) - 1;
-		data->targy = (obj_centery (obj) >> FRAC * 2) + (xrand () % 2) - 1;
-		data->state = ai_wander;
+		data->thinker = ai_wander;
+		data->divspeed = 3;
 	}
 
-	if (data->state == ai_chase)
-	{
-		// init/update node list if we need to
-		if ((!data->nodelist || obj_centerx (data->target) >> FRAC * 2 != data->targx
-		||  obj_centery (data->target) >> FRAC * 2 != data->targy) && ai_sight (obj, data->target))
-		{
-			data->targx = obj_centerx (data->target) >> FRAC * 2;
-			data->targy = obj_centery (data->target) >> FRAC * 2;
-			data->nodeidx = 1; // exclude first node since we're on it anyway
-	
-			if (data->nodelist)
-			{
-				free (data->nodelist);
-				data->nodelist = NULL;
-			}
-
-			data->nodelist = ai_get_path (obj, data->target, level);
-
-			if (!data->nodelist)
-				return;
-		}
-	
-		distx = ((data->nodelist [data->nodeidx].x << FRAC * 2) + (8 << FRAC)) - obj_centerx (obj);
-		disty = ((data->nodelist [data->nodeidx].y << FRAC * 2) + (8 << FRAC)) - obj_centery (obj);
-
-		if (distx || disty)
-		{
-			obj->deltax = fixdiv (distx, abs (max (abs (distx), abs (disty)))) / 2;
-			obj->deltay = fixdiv (disty, abs (max (abs (distx), abs (disty)))) / 2;
-
-			obj_point (obj);
-	
-			obj->deltax = fixmul (obj->deltax, float_to_fixed ((xrand () % 40) / 20.0));
-			obj->deltay = fixmul (obj->deltay, float_to_fixed ((xrand () % 40) / 20.0));
-		}
-	
-		if (abs (distx) <= 3 << FRAC && abs (disty) <= 3 << FRAC)
-		{
-			if (data->nodelist [data->nodeidx].x != (uint8)data->targx || data->nodelist [data->nodeidx].y != (uint8)data->targy)
-				data->nodeidx ++;
-			else
-			{
-				free (data->nodelist);
-				data->nodelist = NULL;
-			}
-		}
-	}
-	else if (data->state == ai_attack)
-	{
-		fixed thres = float_to_fixed (23.0); // distance required
-		distx = data->targx - obj_centerx (obj);
-		disty = data->targy - obj_centery (obj);
-
-		if (distx || disty)
-		{
-			obj->deltax = fixdiv (distx, thres);
-			obj->deltay = fixdiv (disty, thres);
-
-			obj_point (obj);
-		}
-
-		if (obj->frame == slime_anim_crawl1) // attack over
-		{
-			free (data->nodelist);
-			data->nodelist = NULL;
-			data->state = ai_null;
-		}
-	}
-	else if (data->state == ai_wander)
-	{
-		distx = ((data->targx << FRAC * 2) + (8 << FRAC)) - obj_centerx (obj);
-		disty = ((data->targy << FRAC * 2) + (8 << FRAC)) - obj_centery (obj);
-
-		if (distx || disty)
-		{
-			obj->deltax = fixdiv (distx, abs (max (abs (distx), abs (disty)))) / 2;
-			obj->deltay = fixdiv (disty, abs (max (abs (distx), abs (disty)))) / 2;
-
-			obj_point (obj);
-	
-			obj->deltax = fixmul (obj->deltax, float_to_fixed ((xrand () % 40) / 20.0));
-			obj->deltay = fixmul (obj->deltay, float_to_fixed ((xrand () % 40) / 20.0));
-		}
-
-		if ((abs (distx) <= 3 << FRAC && abs (disty) <= 3 << FRAC)
-		|| !(curtick % (120 + xrand () % 60)))
-		{
-			data->targx = (obj_centerx (obj) >> FRAC * 2) + ((xrand () % 2) ? 1 : -1);
-			data->targy = (obj_centery (obj) >> FRAC * 2) + ((xrand () % 2) ? 1 : -1);
-		}
-	}
+	if (data->thinker)
+		data->thinker (obj, data);
 
 	obj_collide_tiles (obj, level->tiles, level->w);
 	obj_collide_hitbox (obj, &data->target->hitbox);

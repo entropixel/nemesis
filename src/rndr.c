@@ -493,8 +493,8 @@ void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player)
 
 	SDL_RenderCopy (rndr, titletxt, NULL, &toprct);
 	SDL_RenderCopy (rndr, vertxt, NULL, &botrct);
-	sprintf (xtext, "x: %i.%i", player->hitbox.x >> FRAC, (fixed) ((float)(player->hitbox.x & 0x000f) * (100.0/16.0)));
-	sprintf (ytext, "y: %i.%i", player->hitbox.y >> FRAC, (fixed) ((float)(player->hitbox.y & 0x000f) * (100.0/16.0)));
+	sprintf (xtext, "x: %f", fixed_to_float (player->hitbox.x));
+	sprintf (ytext, "y: %f", fixed_to_float (player->hitbox.y));
 	sprintf (mstext, "%ims", frametimes [(curtick % 48) - (curtick % 6)]);
 	rndr_print_text (xtext, 8, 40);
 	rndr_print_text (ytext, 8, 56);

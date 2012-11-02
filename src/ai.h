@@ -23,20 +23,15 @@ typedef struct mapnode_s
 	struct mapnode_s *parent;
 } mapnode_t;
 
-typedef struct
+typedef struct aidata_s
 {
 	obj_t *target;
 	fixed targx;
 	fixed targy;
+	uint8 divspeed;
 	mapnode_t *nodelist;
 	uint16 nodeidx;
-	enum
-	{
-		ai_null,
-		ai_wander,
-		ai_chase,
-		ai_attack
-	} state;
+	void (*thinker) (obj_t *obj, struct aidata_s *data);
 } aidata_t;
 
 mapnode_t *ai_get_path (obj_t *obj, obj_t *targ, level_t *l);

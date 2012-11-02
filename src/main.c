@@ -138,7 +138,7 @@ int main (int argc, char **argv)
 
 	int i;
 
-	for (i = 0; i < 32; i++)
+	for (i = 0; i < 16; i++)
 	{
 		obj_t *slime;
 		rndr_nif_reset (slimespr);
@@ -154,7 +154,7 @@ int main (int argc, char **argv)
 		((aidata_t*)slime->data)->targx = ((aidata_t*)slime->data)->targy = 0;
 		((aidata_t*)slime->data)->nodelist = NULL;
 		((aidata_t*)slime->data)->nodeidx = 0;
-		((aidata_t*)slime->data)->state = ai_chase;
+		((aidata_t*)slime->data)->thinker = NULL;
 	}
 
 	if (argc < 2)

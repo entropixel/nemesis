@@ -14,6 +14,7 @@ typedef int16_t fixed;
 
 #define FRAC 4 // 16 sub-units
 fixed float_to_fixed (float a);
+float fixed_to_float (fixed a);
 fixed fixmul (fixed a, fixed b);
 fixed fixdiv (fixed a, fixed b);
 
