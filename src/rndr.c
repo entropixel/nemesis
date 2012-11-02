@@ -324,9 +324,63 @@ void rndr_do_tiles (SDL_Texture *tiles, SDL_Rect *camera)
 	return;
 }
 
+// sort all objects by their Y value
+obj_t *rndr_ysort (obj_t *list, obj_t **end)
+{
+	obj_t *new = list, *it = list->next;
+
+	if (!list || !list->next)
+		return list;
+
+	new->next = NULL;
+
+	while (it)
+	{
+		obj_t *it2 = new;
+		obj_t *tmp = it;
+
+		// Do we need to insert this before the first node?
+		if (obj_centery (new) > obj_centery (it))
+		{
+			it = it->next;
+			tmp->next = new;
+			new = tmp;
+
+			continue;
+		}
+
+		// loop until we find the place to insert this
+		while (it2->next && obj_centery (it) > obj_centery (it2->next))
+			it2 = it2->next;
+
+		it = it->next;
+
+		// FIXME: Stop the flickering
+		if (it2->next) // && obj_centery (tmp) != obj_centery (it2->next))
+		{
+			tmp->next = it2->next;
+			it2->next = tmp;
+		}
+		else
+		{
+			it2->next = tmp;
+			it2->next->next = NULL;
+			*end = it2->next;
+		}
+	}
+
+	return new;
+}
+
+static uint32 numobj;
 void rndr_do_objs (SDL_Rect *camera)
 {
-	obj_t *it = obj_list_head;
+	obj_t *it;
+
+	obj_list_head = rndr_ysort (obj_list_head, &obj_list_tail);
+
+	it = obj_list_head;
+	numobj = 0;
 
 	while (it)
 	{
@@ -340,6 +394,7 @@ void rndr_do_objs (SDL_Rect *camera)
 			SDL_RenderCopy (rndr, it->tex, &(it->show), &(it->dest));
 
 		it = it->next;
+		numobj ++;
 	}
 
 	return;
@@ -472,8 +527,8 @@ void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player)
 	int32 i;
 	static SDL_Rect toprct = { .x = 8, .y = 8 }, botrct = { .x = 8, .y = 24 };
 	static SDL_Texture *titletxt = NULL, *vertxt = NULL;
-	char mstext [16] = "What.", xtext [16] = "x: ", ytext [16] = "y: ";
-	obj_t *it = obj_list_head;;
+	char mstext [16] = "What.", xtext [16] = "x: ", ytext [16] = "y: ", objtext [16] = "e: ";
+	obj_t *it = obj_list_head;
 
 	if (!titletxt && !vertxt)
 	{
@@ -495,9 +550,11 @@ void rndr_do_debug (uint16 *frametimes, SDL_Rect *camera, obj_t *player)
 	SDL_RenderCopy (rndr, vertxt, NULL, &botrct);
 	sprintf (xtext, "x: %f", fixed_to_float (player->hitbox.x));
 	sprintf (ytext, "y: %f", fixed_to_float (player->hitbox.y));
+	sprintf (objtext, "e: %u", numobj);
 	sprintf (mstext, "%ims", frametimes [(curtick % 48) - (curtick % 6)]);
 	rndr_print_text (xtext, 8, 40);
 	rndr_print_text (ytext, 8, 56);
+	rndr_print_text (objtext, 8, 72);
 	rndr_print_text (mstext, 100, 150);
 
 	SDL_SetRenderDrawBlendMode (rndr, SDL_BLENDMODE_MOD);
