@@ -327,49 +327,30 @@ void rndr_do_tiles (SDL_Texture *tiles, SDL_Rect *camera)
 // sort all objects by their Y value
 obj_t *rndr_ysort (obj_t *list, obj_t **end)
 {
-	obj_t *new = list, *it = list->next;
+	obj_t *sorted = NULL;
 
-	if (!list || !list->next)
-		return list;
-
-	new->next = NULL;
-
-	while (it)
+	while (list)
 	{
-		obj_t *it2 = new;
-		obj_t *tmp = it;
+		obj_t *head = list, **trail = &sorted;
 
-		// Do we need to insert this before the first node?
-		if (obj_centery (new) > obj_centery (it))
+		list = list->next;
+
+		while (1)
 		{
-			it = it->next;
-			tmp->next = new;
-			new = tmp;
-
-			continue;
-		}
-
-		// loop until we find the place to insert this
-		while (it2->next && obj_centery (it) > obj_centery (it2->next))
-			it2 = it2->next;
-
-		it = it->next;
-
-		// FIXME: Stop the flickering
-		if (it2->next) // && obj_centery (tmp) != obj_centery (it2->next))
-		{
-			tmp->next = it2->next;
-			it2->next = tmp;
-		}
-		else
-		{
-			it2->next = tmp;
-			it2->next->next = NULL;
-			*end = it2->next;
+			// move the head?
+			if (!(*trail)
+			|| (head->hitbox.y + head->hitbox.h) >> (FRAC + 2) < (*trail)->hitbox.y + (*trail)->hitbox.h >> (FRAC + 2))
+			{
+				head->next = *trail;
+				*trail = head;
+				break;
+			}
+			else
+				trail = &(*trail)->next;
 		}
 	}
 
-	return new;
+	return sorted;
 }
 
 static uint32 numobj;
