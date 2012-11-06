@@ -333,6 +333,9 @@ obj_t *rndr_ysort (obj_t *list, obj_t **end)
 	{
 		obj_t *head = list, **trail = &sorted;
 
+		if (list->next)
+			*end = list->next;
+
 		list = list->next;
 
 		while (1)
