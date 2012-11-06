@@ -26,6 +26,7 @@ mapnode_t *ai_get_astar (obj_t *obj, obj_t *targ, level_t *l, uint32 *numnodes)
 	mapnode_t nodelist [l->w * l->h];
 	mapnode_t *opened [l->w * l->h], *closed [l->w * l->h];
 	mapnode_t *goal;
+	obj_t *it = obj_list_head;
 
 	iopen = iclose = 0;
 	*numnodes = 0;
@@ -49,6 +50,15 @@ mapnode_t *ai_get_astar (obj_t *obj, obj_t *targ, level_t *l, uint32 *numnodes)
 			nodelist [i * l->w + j].parent = NULL;
 		}
 
+	// add all object containing tiles to the blocked list
+	while (it)
+	{
+		if (it != obj && it != targ && (it->hitbox.w || it->hitbox.h))
+			nodelist [(obj_centerx (it) >> FRAC * 2) * l->w + (obj_centery (it) >> FRAC * 2)].type = N_PENALTY;
+
+		it = it->next;
+	}
+
 	opened [iopen++] = &(nodelist [(obj_centerx (obj) >> FRAC * 2) * l->w + (obj_centery (obj) >> FRAC * 2)]);
 	opened [iopen - 1]->type = N_OPENED;
 
@@ -63,6 +73,9 @@ mapnode_t *ai_get_astar (obj_t *obj, obj_t *targ, level_t *l, uint32 *numnodes)
 			// set scores
 			if (!opened [i]->h && opened [i] != goal)
 				opened [i]->h = MD (opened [i], goal);
+
+			if (opened [i]->type == N_PENALTY)
+				opened [i]->h *= 4;
 
 			if (opened [i]->parent && !opened [i]->g)
 			{
@@ -137,12 +150,15 @@ mapnode_t *ai_get_astar (obj_t *obj, obj_t *targ, level_t *l, uint32 *numnodes)
 				else
 					tmpg += 10;
 
-				if (nodelist [i * l->w + j].type == N_UNSET) // neighbor isn't in either set, add to open set
+				// neighbor isn't in either set, add to open set
+				if (nodelist [i * l->w + j].type == N_UNSET || nodelist [i * l->w + j].type == N_PENALTY)
 				{
 					opened [iopen++] = &nodelist [i * l->w + j];
 					opened [iopen - 1]->g = tmpg;
 
-					opened [iopen - 1]->type = N_OPENED;
+					if (nodelist [i * l->w + j].type == N_UNSET)
+						opened [iopen - 1]->type = N_OPENED;
+
 					opened [iopen - 1]->parent = current;
 				}
 				else if (nodelist [i * l->w + j].type == N_OPENED && tmpg < nodelist [i * l->w + j].g)
@@ -163,6 +179,7 @@ mapnode_t *ai_get_drunkwalk (obj_t *obj, level_t *l, uint32_t *numnodes)
 	mapnode_t *ret = malloc (*numnodes * sizeof (mapnode_t)); // the path we return
 	mapnode_t nodelist [l->w * l->h];
 	mapnode_t *current;
+	obj_t *it = obj_list_head;
 
 	if (!ret)
 		return NULL;
@@ -184,6 +201,15 @@ mapnode_t *ai_get_drunkwalk (obj_t *obj, level_t *l, uint32_t *numnodes)
 			nodelist [i * l->w + j].g = nodelist [i * l->w + j].h = 0;
 			nodelist [i * l->w + j].parent = NULL;
 		}
+
+	// add all object containing tiles to the blocked list
+	while (it)
+	{
+		if (it != obj && (it->hitbox.w || it->hitbox.h))
+			nodelist [(obj_centerx (it) >> FRAC * 2) * l->w + (obj_centery (it) >> FRAC * 2)].type = N_BLOCKED;
+
+		it = it->next;
+	}
 
 	current = &(nodelist [(obj_centerx (obj) >> FRAC * 2) * l->w + (obj_centery (obj) >> FRAC * 2)]);
 	memcpy (ret, current, sizeof (mapnode_t));
@@ -315,7 +341,8 @@ void ai_chase (obj_t *obj, aidata_t *data)
 {
 	// init/update node list if we need to
 	if ((!data->nodelist || obj_centerx (data->target) >> FRAC * 2 != data->targx
-	||  obj_centery (data->target) >> FRAC * 2 != data->targy) && ai_sight (obj, data->target))
+	||  obj_centery (data->target) >> FRAC * 2 != data->targy || (!obj->deltax && !obj->deltay && data->collided))
+	&& ai_sight (obj, data->target))
 	{
 		uint32 numnodes;
 
@@ -348,7 +375,7 @@ void ai_chase (obj_t *obj, aidata_t *data)
 void ai_wander (obj_t *obj, aidata_t *data)
 {
 	// init/update node list if we need to
-	if (!data->nodelist)
+	if (!data->nodelist || (!obj->deltax && !obj->deltay && data->collided))
 	{
 		uint32 numnodes = 16;
 
@@ -406,7 +433,18 @@ void ai_thinker (obj_t *obj)
 		data->thinker (obj, data);
 
 	obj_collide_tiles (obj, level->tiles, level->w);
-	obj_collide_hitbox (obj, &data->target->hitbox);
+
+	obj_t *it = obj_list_head;
+
+	data->collided = 0;
+
+	while (it)
+	{
+		if (it->hitbox.w && it->hitbox.h && it != obj)
+			data->collided |= obj_collide_hitbox (obj, &(it->hitbox));
+
+		it = it->next;
+	}
 
 	obj->hitbox.x += obj->deltax;
 	obj->hitbox.y += obj->deltay;

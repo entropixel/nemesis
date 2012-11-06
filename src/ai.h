@@ -10,7 +10,8 @@ typedef enum
 	N_UNSET,
 	N_OPENED,
 	N_CLOSED,
-	N_BLOCKED
+	N_BLOCKED,
+	N_PENALTY
 } nodetype_e;
 
 typedef struct mapnode_s
@@ -29,6 +30,7 @@ typedef struct aidata_s
 	fixed targx;
 	fixed targy;
 	uint8 divspeed;
+	uint8 collided;
 	mapnode_t *nodelist;
 	uint16 nodeidx;
 	void (*thinker) (obj_t *obj, struct aidata_s *data);
