@@ -19,7 +19,7 @@
 
 extern SDL_Renderer *rndr;
 
-uint8 iopen = 0, iclose = 0;
+uint32 iopen = 0, iclose = 0;
 mapnode_t *ai_get_astar (obj_t *obj, obj_t *targ, level_t *l, uint32 *numnodes)
 {
 	mapnode_t *ret = NULL; // the path we return
