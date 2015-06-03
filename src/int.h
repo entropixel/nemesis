@@ -1,3 +1,4 @@
+/* See LICENSE file for copyright and licensing details */
 // wrapper for stdint
 
 #ifndef INT_H__

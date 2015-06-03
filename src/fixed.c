@@ -1,7 +1,4 @@
-/* nemesis engine
-   [c] 2012 Kyle Davis, All Rights Reserved
-   Unauthorized redistribution is prohibited. */
-
+/* See LICENSE file for copyright and licensing details */
 #include "int.h"
 
 inline fixed float_to_fixed (float a)

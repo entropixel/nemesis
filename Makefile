@@ -1,5 +1,5 @@
 CC = gcc
-SDL2_PATH = ~/sdl2/
+SDL2_PATH = /usr
 OPT = 0
 DBG = 3
 MYCFLAGS =

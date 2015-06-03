@@ -1,7 +1,4 @@
-/* nemesis engine
-   [c] 2012 Kyle Davis, All Rights Reserved
-   Unauthorized redistribution is prohibited. */
-
+/* See LICENSE file for copyright and licensing details */
 #ifndef ANIM_H__
 #define ANIM_H__
 
