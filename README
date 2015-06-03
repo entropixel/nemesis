@@ -1,17 +1,17 @@
 Nemesis
 
-This was entropixel's first project, started in June 2012 and was shelved shortly
-after we finished the "jam" part of Dawning, in early November 2012. I'm uploading 
-it in case anyone finds it interesting, there's not really any reason for me to 
-keep it to myself forever.
+This was entropixel's first project, started in June 2012 and was shelved 
+shortly after we finished the "jam" part of Dawning, in early November 2012.
+I'm uploading it in case anyone finds it interesting, there's not really any
+reason for me to keep it to myself forever.
 
-It should compile on any sane setup with SDL2 installed. The Makefile is simple so
-you can modify it if necessary.
+It should compile on any sane setup with SDL2 installed. The Makefile is 
+simple so you can modify it if necessary.
 
 The artwork is in this weird .nif format, which was supposed to make color 
-shifting easier. If anyone wants the artwork in a different format, just contact 
-me (tm512) and I'll see if I can find some converter for it.
+shifting easier. If anyone wants the artwork in a different format, just 
+contact me (tm512) and I'll see if I can find some converter for it.
 
-I'm licensing the code under the ISC license, feel free to use it for pretty much
-anything, if you want. Tempest, the artist, says the license on the art makes no
-difference to him, so I'm releasing it under the CC BY license.
+I'm licensing the code under the ISC license, feel free to use it for pretty
+much anything, if you want. Tempest, the artist, says the license on the art
+makes no difference to him, so I'm releasing it under the CC BY license.
